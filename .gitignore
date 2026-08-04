@@ -1,0 +1,18 @@
+# SymbiYosys formal run output
+dv/formal/*/
+
+# DSim compilation and run output
+dsim*/
+reports/
+*.env
+*.log
+*.db
+*.fst
+*.vcd
+
+# Sigasi project artifacts
+project.sigasi
+*.sigasi/
+
+# Local project guide
+outline.md
