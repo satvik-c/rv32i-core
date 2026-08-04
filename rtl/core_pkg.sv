@@ -31,5 +31,6 @@ package core_pkg;
     localparam logic [6:0] OP_STORE = 7'b0100011;
     localparam logic [6:0] OP_ALU_R = 7'b0110011;
     localparam logic [6:0] OP_ALU_I = 7'b0010011;
+    localparam logic [6:0] OP_BRANCH = 7'b1100011;
 
 endpackage

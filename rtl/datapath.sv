@@ -9,6 +9,7 @@ module datapath
     input alu_op_e alu_op,
     input imm_src_e imm_src,
     input logic result_src,
+    input logic branch,
 
     output logic [31:0] pc,
     input logic [31:0] instr,
@@ -22,12 +23,16 @@ module datapath
     logic [31:0] imm_ext;
     logic [31:0] result;
 
+    logic [31:0] pc_next;
+    logic take_branch;
+
     assign src_b = (alu_src) ? imm_ext : write_data;
     assign result = (result_src) ? read_data : alu_result;
+    assign pc_next = (branch && take_branch) ? (pc + imm_ext) : (pc + 32'd4);
 
     always_ff @(posedge clk) begin
         if (!rst_n) pc <= 32'h8000_0000;
-        else pc <= pc + 32'd4;
+        else pc <= pc_next;
     end
 
     alu alu_u (
@@ -54,6 +59,13 @@ module datapath
         .wd3(result),
         .rd1(src_a),
         .rd2(write_data)
+    );
+
+    branch_logic branch_logic_instance (
+        .funct3(instr[14:12]),
+        .src_a(src_a),
+        .src_b(write_data),
+        .take_branch(take_branch)
     );
 
 endmodule

@@ -7,7 +7,8 @@ module main_dec
     output logic alu_src,           // 0 = register, 1 = immediate
     output alu_force_e alu_force,
     output imm_src_e imm_src,
-    output logic result_src         // 0 = alu, 1 = memory
+    output logic result_src,        // 0 = alu, 1 = memory
+    output logic branch
 );
 
     always_comb begin
@@ -17,6 +18,7 @@ module main_dec
         result_src = 1'b0;
         imm_src = IMM_I;
         alu_force = ALU_FORCE_ADD;
+        branch = 1'b0;
 
         case (op)
             OP_LOAD: begin
@@ -41,6 +43,10 @@ module main_dec
                 alu_src = 1'b1;
                 imm_src = IMM_I;
                 alu_force = ALU_FUNCT_DECODE;
+            end
+            OP_BRANCH: begin
+                imm_src = IMM_B;
+                branch = 1'b1;
             end
             default: ;
         endcase

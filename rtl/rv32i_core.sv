@@ -17,6 +17,7 @@ module rv32i_core
     alu_op_e alu_op;
     imm_src_e imm_src;
     logic result_src;
+    logic branch;
 
     controller controller_u (
         .op(instr[6:0]),
@@ -28,7 +29,8 @@ module rv32i_core
         .alu_src(alu_src),
         .alu_op(alu_op),
         .imm_src(imm_src),
-        .result_src(result_src)
+        .result_src(result_src),
+        .branch(branch)
     );
 
     datapath datapath_u (
@@ -43,7 +45,8 @@ module rv32i_core
         .instr(instr),
         .alu_result(alu_result),
         .write_data(write_data),
-        .read_data(read_data)
+        .read_data(read_data),
+        .branch(branch)
     );
 
 endmodule

@@ -10,7 +10,8 @@ module controller
     output logic alu_src,
     output alu_op_e alu_op,
     output imm_src_e imm_src,
-    output logic result_src
+    output logic result_src,
+    output logic branch
 );
 
     alu_force_e alu_force;
@@ -22,7 +23,8 @@ module controller
         .alu_src(alu_src),
         .alu_force(alu_force),
         .imm_src(imm_src),
-        .result_src(result_src)
+        .result_src(result_src),
+        .branch(branch)
     );
 
     alu_dec alu_dec_u (
