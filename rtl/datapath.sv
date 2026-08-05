@@ -17,6 +17,7 @@ module datapath
     input logic [31:0] instr,
     output logic [31:0] alu_result,
     output logic [31:0] write_data,
+    output logic [3:0] wstrb,
     input logic [31:0] read_data
 );
 
@@ -28,11 +29,14 @@ module datapath
     logic [31:0] pc_next;
     logic take_branch;
 
-    assign src_b = (alu_src) ? imm_ext : write_data;
+    logic [31:0] rd2_data;
+    logic [31:0] lsu_result;
+
+    assign src_b = (alu_src) ? imm_ext : rd2_data;
     
     always_comb begin
         if (result_src == RESULT_ALU) result = alu_result;
-        else if (result_src == RESULT_MEM) result = read_data;
+        else if (result_src == RESULT_MEM) result = lsu_result;
         else if (result_src == RESULT_PC4) result = pc + 32'd4;
         else if (result_src == RESULT_AUIPC) result = alu_result + pc;
         else result = 32'd0;
@@ -72,14 +76,24 @@ module datapath
         .we3(reg_write),
         .wd3(result),
         .rd1(src_a),
-        .rd2(write_data)
+        .rd2(rd2_data)
     );
 
     branch_logic branch_logic_instance (
         .funct3(instr[14:12]),
         .src_a(src_a),
-        .src_b(write_data),
+        .src_b(rd2_data),
         .take_branch(take_branch)
+    );
+
+    lsu lsu_instance (
+        .funct3(instr[14:12]),
+        .addr(alu_result),
+        .rs2_data(rd2_data),
+        .dmem_wdata(write_data),
+        .dmem_wstrb(wstrb),
+        .dmem_rdata(read_data),
+        .result_data(lsu_result)
     );
 
 endmodule

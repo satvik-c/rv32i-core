@@ -8,6 +8,7 @@ rtl/reg_file.sv
 rtl/main_dec.sv
 rtl/alu_dec.sv
 rtl/branch_logic.sv
+rtl/lsu.sv
 rtl/controller.sv
 rtl/datapath.sv
 

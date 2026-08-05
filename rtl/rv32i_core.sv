@@ -8,6 +8,7 @@ module rv32i_core
     input logic [31:0] instr,
     output logic [31:0] alu_result,
     output logic [31:0] write_data,
+    output logic [3:0] wstrb,
     input logic [31:0] read_data,
     output logic mem_write
 );
@@ -49,6 +50,7 @@ module rv32i_core
         .instr(instr),
         .alu_result(alu_result),
         .write_data(write_data),
+        .wstrb(wstrb),
         .read_data(read_data),
         .branch(branch),
         .jump(jump),

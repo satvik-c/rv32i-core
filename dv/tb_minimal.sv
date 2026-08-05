@@ -9,6 +9,7 @@ module tb_minimal();
     logic [31:0] instr;
     logic [31:0] alu_result;
     logic [31:0] write_data;
+    logic [3:0] wstrb;
     logic [31:0] read_data;
     logic mem_write;
 
@@ -112,12 +113,51 @@ module tb_minimal();
 
         imem[91] = 32'hdeadbd37; // lui x26, 0xdeadb
         imem[92] = 32'h00002e97; // auipc x29, 0x2 (pc=0x80000170)
+
+        imem[93] = 32'h80100c37; // lui x24, 0x80100
+        imem[94] = 32'h07fc6c13; // ori x24, x24, 0x7f
+        imem[95] = 32'h0d802423; // sw x24, 200(x0)
+        imem[96] = 32'h0d802623; // sw x24, 204(x0)
+        imem[97] = 32'h0d802823; // sw x24, 208(x0)
+        imem[98] = 32'h0d802a23; // sw x24, 212(x0)
+        imem[99] = 32'h0d802c23; // sw x24, 216(x0)
+        imem[100] = 32'h0d802e23; // sw x24, 220(x0)
+        imem[101] = 32'h0f802023; // sw x24, 224(x0)
+        imem[102] = 32'h0aa00c93; // addi x25, x0, 170
+        imem[103] = 32'h0d900623; // sb x25, 204(x0)
+        imem[104] = 32'h0aa00c93; // addi x25, x0, 170
+        imem[105] = 32'h0d9008a3; // sb x25, 209(x0)
+        imem[106] = 32'h0aa00c93; // addi x25, x0, 170
+        imem[107] = 32'h0d900b23; // sb x25, 214(x0)
+        imem[108] = 32'h0aa00c93; // addi x25, x0, 170
+        imem[109] = 32'h0d900da3; // sb x25, 219(x0)
+        imem[110] = 32'h56600c93; // addi x25, x0, 1382
+        imem[111] = 32'h0d901e23; // sh x25, 220(x0)
+        imem[112] = 32'h56600c93; // addi x25, x0, 1382
+        imem[113] = 32'h0f901123; // sh x25, 226(x0)
+        imem[114] = 32'h0c800c83; // lb x25, 200(x0)
+        imem[115] = 32'h0f902223; // sw x25, 228(x0)
+        imem[116] = 32'h0cb00c83; // lb x25, 203(x0)
+        imem[117] = 32'h0f902423; // sw x25, 232(x0)
+        imem[118] = 32'h0cb04c83; // lbu x25, 203(x0)
+        imem[119] = 32'h0f902623; // sw x25, 236(x0)
+        imem[120] = 32'h0c801c83; // lh x25, 200(x0)
+        imem[121] = 32'h0f902823; // sw x25, 240(x0)
+        imem[122] = 32'h0ca01c83; // lh x25, 202(x0)
+        imem[123] = 32'h0f902a23; // sw x25, 244(x0)
+        imem[124] = 32'h0ca05c83; // lhu x25, 202(x0)
+        imem[125] = 32'h0f902c23; // sw x25, 248(x0)
     end
 
     assign instr = imem[(pc - 32'h8000_0000) >> 2];
 
     always_ff @(posedge clk) begin
-        if (mem_write) dmem[alu_result >> 2] <= write_data;
+        if (mem_write) begin
+            if (wstrb[0]) dmem[alu_result >> 2][7:0] <= write_data[7:0];
+            if (wstrb[1]) dmem[alu_result >> 2][15:8] <= write_data[15:8];
+            if (wstrb[2]) dmem[alu_result >> 2][23:16] <= write_data[23:16];
+            if (wstrb[3]) dmem[alu_result >> 2][31:24] <= write_data[31:24];
+        end
     end
 
     assign read_data = dmem[alu_result >> 2];
@@ -134,7 +174,7 @@ module tb_minimal();
         repeat (5) @(posedge clk);
         rst_n = 1;        
 
-        #1000;
+        #1300;
 
         // Comprehensive ALU Assertions
         assert (dut.datapath_u.reg_file_u.regs[1]  == 32'd15)    else $error("Assertion failed: x1 != 15");
@@ -187,6 +227,21 @@ module tb_minimal();
         // LUI/AUIPC Assertions
         assert (dut.datapath_u.reg_file_u.regs[26] == 32'hdeadb000) else $error("Assertion failed: x26 (lui) != 0xdeadb000");
         assert (dut.datapath_u.reg_file_u.regs[29] == 32'h80002170) else $error("Assertion failed: x29 (auipc) != 0x80002170");
+
+        // Sub-word Load/Store Assertions
+        assert (dmem[50] == 32'h8010007f) else $error("Assertion failed: dmem[50] != 0x8010007f (canary corrupted)");
+        assert (dmem[51] == 32'h801000aa) else $error("Assertion failed: dmem[51] != 0x801000aa (sb offset 0 wrong lane or clobbered others)");
+        assert (dmem[52] == 32'h8010aa7f) else $error("Assertion failed: dmem[52] != 0x8010aa7f (sb offset 1 wrong lane or clobbered others)");
+        assert (dmem[53] == 32'h80aa007f) else $error("Assertion failed: dmem[53] != 0x80aa007f (sb offset 2 wrong lane or clobbered others)");
+        assert (dmem[54] == 32'haa10007f) else $error("Assertion failed: dmem[54] != 0xaa10007f (sb offset 3 wrong lane or clobbered others)");
+        assert (dmem[55] == 32'h80100566) else $error("Assertion failed: dmem[55] != 0x80100566 (sh addr[1]=0 wrong lane or clobbered others)");
+        assert (dmem[56] == 32'h0566007f) else $error("Assertion failed: dmem[56] != 0x566007f (sh addr[1]=1 wrong lane or clobbered others)");
+        assert (dmem[57] == 32'h0000007f) else $error("Assertion failed: dmem[57] != 0x7f (lb byte0 (+127))");
+        assert (dmem[58] == 32'hffffff80) else $error("Assertion failed: dmem[58] != 0xffffff80 (lb byte3 (-128))");
+        assert (dmem[59] == 32'h00000080) else $error("Assertion failed: dmem[59] != 0x80 (lbu byte3 (+128))");
+        assert (dmem[60] == 32'h0000007f) else $error("Assertion failed: dmem[60] != 0x7f (lh half0 (+127))");
+        assert (dmem[61] == 32'hffff8010) else $error("Assertion failed: dmem[61] != 0xffff8010 (lh half2 (-32752))");
+        assert (dmem[62] == 32'h00008010) else $error("Assertion failed: dmem[62] != 0x8010 (lhu half2 (+32784))");
 
         $finish;
     end
