@@ -5,6 +5,8 @@ module tb_minimal();
     logic clk;
     logic rst_n;
 
+    logic core_halted;
+
     logic [31:0] pc;
     logic [31:0] instr;
     logic [31:0] alu_result;

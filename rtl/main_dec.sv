@@ -10,7 +10,8 @@ module main_dec
     output result_src_e result_src,
     output logic branch,
     output logic jump,
-    output logic jalr
+    output logic jalr,
+    output logic illegal_instr
 );
 
     always_comb begin
@@ -23,6 +24,7 @@ module main_dec
         branch = 1'b0;
         jump = 1'b0;
         jalr = 1'b0;
+        illegal_instr = 1'b0;
 
         case (op)
             OP_LOAD: begin
@@ -78,7 +80,13 @@ module main_dec
                 imm_src = IMM_U;
                 alu_force = ALU_FORCE_SRCB;
             end
-            default: ;
+            OP_FENCE: begin
+                // NOP
+            end
+            OP_SYSTEM: begin
+                illegal_instr = 1'b1; // ECALL/EBREAK halt core for now
+            end
+            default: illegal_instr = 1'b1;
         endcase
     end
 

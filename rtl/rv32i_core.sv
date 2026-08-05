@@ -4,6 +4,8 @@ module rv32i_core
     input logic clk,
     input logic rst_n,
 
+    output logic core_halted,
+
     output logic [31:0] pc,
     input logic [31:0] instr,
     output logic [31:0] alu_result,
@@ -21,6 +23,9 @@ module rv32i_core
     logic branch;
     logic jump;
     logic jalr;
+    logic illegal_instr;
+
+    assign core_halted = illegal_instr;
 
     controller controller_u (
         .op(instr[6:0]),
@@ -35,7 +40,8 @@ module rv32i_core
         .result_src(result_src),
         .branch(branch),
         .jump(jump),
-        .jalr(jalr)
+        .jalr(jalr),
+        .illegal_instr(illegal_instr)
     );
 
     datapath datapath_u (
@@ -54,7 +60,8 @@ module rv32i_core
         .read_data(read_data),
         .branch(branch),
         .jump(jump),
-        .jalr(jalr)
+        .jalr(jalr),
+        .illegal_instr(illegal_instr)
     );
 
 endmodule

@@ -44,5 +44,7 @@ package core_pkg;
     localparam logic [6:0] OP_JAL = 7'b1101111;
     localparam logic [6:0] OP_LUI = 7'b0110111;
     localparam logic [6:0] OP_AUIPC = 7'b0010111;
+    localparam logic [6:0] OP_FENCE = 7'b0001111;
+    localparam logic [6:0] OP_SYSTEM = 7'b1110011;
 
 endpackage

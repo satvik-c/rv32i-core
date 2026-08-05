@@ -12,6 +12,7 @@ module datapath
     input logic branch,
     input logic jump,
     input logic jalr,
+    input logic illegal_instr,
 
     output logic [31:0] pc,
     input logic [31:0] instr,
@@ -50,7 +51,7 @@ module datapath
 
     always_ff @(posedge clk) begin
         if (!rst_n) pc <= 32'h8000_0000;
-        else pc <= pc_next;
+        else if (!illegal_instr) pc <= pc_next;
     end
 
     alu alu_u (

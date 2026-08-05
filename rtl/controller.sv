@@ -13,7 +13,8 @@ module controller
     output result_src_e result_src,
     output logic branch,
     output logic jump,
-    output logic jalr
+    output logic jalr,
+    output logic illegal_instr
 );
 
     alu_force_e alu_force;
@@ -28,7 +29,8 @@ module controller
         .result_src(result_src),
         .branch(branch),
         .jump(jump),
-        .jalr(jalr)
+        .jalr(jalr),
+        .illegal_instr(illegal_instr)
     );
 
     alu_dec alu_dec_u (
