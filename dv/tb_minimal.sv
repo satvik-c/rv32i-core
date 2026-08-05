@@ -109,6 +109,9 @@ module tb_minimal();
         imem[88] = 32'h00c0006f; // jal x0, END (imm=12)
         imem[89] = 32'h30900f93; // addi x31, x0, 777    (SUB:)
         imem[90] = 32'h000e0067; // jalr x0, 0(x28)       (return)
+
+        imem[91] = 32'hdeadbd37; // lui x26, 0xdeadb
+        imem[92] = 32'h00002e97; // auipc x29, 0x2 (pc=0x80000170)
     end
 
     assign instr = imem[(pc - 32'h8000_0000) >> 2];
@@ -180,6 +183,10 @@ module tb_minimal();
         assert (dut.datapath_u.reg_file_u.regs[30] == 32'd999) else $error("Assertion failed: x30 != 999 (did not return from subroutine correctly)");
         assert (dut.datapath_u.reg_file_u.regs[31] == 32'd777) else $error("Assertion failed: x31 != 777 (subroutine body did not execute)");
         assert (dut.datapath_u.reg_file_u.regs[0] == 32'd0) else $error("Assertion failed: x0 != 0 (jal/jalr with rd=x0 must not corrupt regs[0])");
+
+        // LUI/AUIPC Assertions
+        assert (dut.datapath_u.reg_file_u.regs[26] == 32'hdeadb000) else $error("Assertion failed: x26 (lui) != 0xdeadb000");
+        assert (dut.datapath_u.reg_file_u.regs[29] == 32'h80002170) else $error("Assertion failed: x29 (auipc) != 0x80002170");
 
         $finish;
     end

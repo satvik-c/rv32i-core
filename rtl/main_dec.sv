@@ -64,6 +64,20 @@ module main_dec
                 imm_src = IMM_J;
                 jump = 1'b1;
             end
+            OP_LUI: begin
+                reg_write = 1'b1;
+                alu_src = 1'b1;
+                result_src = RESULT_ALU;
+                imm_src = IMM_U;
+                alu_force = ALU_FORCE_SRCB;
+            end
+            OP_AUIPC: begin
+                reg_write = 1'b1;
+                alu_src = 1'b1;
+                result_src = RESULT_AUIPC;
+                imm_src = IMM_U;
+                alu_force = ALU_FORCE_SRCB;
+            end
             default: ;
         endcase
     end

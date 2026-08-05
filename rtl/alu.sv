@@ -24,7 +24,7 @@ module alu
             ALU_SRA: result = $signed(src_a) >>> src_b[4:0];
             ALU_OR: result = src_a | src_b;
             ALU_AND: result = src_a & src_b;
-            ALU_LUI: result = src_b;
+            ALU_SRCB: result = src_b;
             default: result = 32'b0;
         endcase
     end

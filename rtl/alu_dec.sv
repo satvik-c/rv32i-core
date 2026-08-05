@@ -26,6 +26,7 @@ module alu_dec
                     default: alu_op = ALU_ADD;
                 endcase
             end
+            ALU_FORCE_SRCB: alu_op = ALU_SRCB;
             default: alu_op = ALU_ADD;
         endcase
     end

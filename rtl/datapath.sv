@@ -34,6 +34,7 @@ module datapath
         if (result_src == RESULT_ALU) result = alu_result;
         else if (result_src == RESULT_MEM) result = read_data;
         else if (result_src == RESULT_PC4) result = pc + 32'd4;
+        else if (result_src == RESULT_AUIPC) result = alu_result + pc;
         else result = 32'd0;
     end
 

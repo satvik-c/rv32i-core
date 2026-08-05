@@ -11,12 +11,13 @@ package core_pkg;
         ALU_SRA,
         ALU_OR,
         ALU_AND,
-        ALU_LUI
+        ALU_SRCB
     } alu_op_e;
 
-    typedef enum logic {
+    typedef enum logic [1:0] {
         ALU_FORCE_ADD,
-        ALU_FUNCT_DECODE
+        ALU_FUNCT_DECODE,
+        ALU_FORCE_SRCB
     } alu_force_e;
 
     typedef enum logic [2:0] {
@@ -30,7 +31,8 @@ package core_pkg;
     typedef enum logic [1:0] {
         RESULT_ALU,
         RESULT_MEM,
-        RESULT_PC4
+        RESULT_PC4,
+        RESULT_AUIPC
     } result_src_e;
 
     localparam logic [6:0] OP_LOAD = 7'b0000011;
@@ -40,5 +42,7 @@ package core_pkg;
     localparam logic [6:0] OP_BRANCH = 7'b1100011;
     localparam logic [6:0] OP_JALR = 7'b1100111;
     localparam logic [6:0] OP_JAL = 7'b1101111;
+    localparam logic [6:0] OP_LUI = 7'b0110111;
+    localparam logic [6:0] OP_AUIPC = 7'b0010111;
 
 endpackage
