@@ -12,6 +12,8 @@ module reg_file
 
     logic [31:0] regs [32];
 
+    initial regs[0] = 32'b0;
+
     assign rd1 = (a1 == 5'b0) ? 32'b0 : regs[a1];
     assign rd2 = (a2 == 5'b0) ? 32'b0 : regs[a2];
 

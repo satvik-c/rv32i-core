@@ -8,8 +8,10 @@ module datapath
     input logic alu_src,
     input alu_op_e alu_op,
     input imm_src_e imm_src,
-    input logic result_src,
+    input result_src_e result_src,
     input logic branch,
+    input logic jump,
+    input logic jalr,
 
     output logic [31:0] pc,
     input logic [31:0] instr,
@@ -27,8 +29,19 @@ module datapath
     logic take_branch;
 
     assign src_b = (alu_src) ? imm_ext : write_data;
-    assign result = (result_src) ? read_data : alu_result;
-    assign pc_next = (branch && take_branch) ? (pc + imm_ext) : (pc + 32'd4);
+    
+    always_comb begin
+        if (result_src == RESULT_ALU) result = alu_result;
+        else if (result_src == RESULT_MEM) result = read_data;
+        else if (result_src == RESULT_PC4) result = pc + 32'd4;
+        else result = 32'd0;
+    end
+
+    always_comb begin
+        if (jalr) pc_next = (src_a + imm_ext) & ~32'd1;
+        else if ((branch && take_branch) || jump) pc_next = pc + imm_ext;
+        else pc_next = pc + 32'd4;
+    end
 
     always_ff @(posedge clk) begin
         if (!rst_n) pc <= 32'h8000_0000;

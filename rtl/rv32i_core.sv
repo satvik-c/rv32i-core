@@ -16,8 +16,10 @@ module rv32i_core
     logic alu_src;
     alu_op_e alu_op;
     imm_src_e imm_src;
-    logic result_src;
+    result_src_e result_src;
     logic branch;
+    logic jump;
+    logic jalr;
 
     controller controller_u (
         .op(instr[6:0]),
@@ -30,7 +32,9 @@ module rv32i_core
         .alu_op(alu_op),
         .imm_src(imm_src),
         .result_src(result_src),
-        .branch(branch)
+        .branch(branch),
+        .jump(jump),
+        .jalr(jalr)
     );
 
     datapath datapath_u (
@@ -46,7 +50,9 @@ module rv32i_core
         .alu_result(alu_result),
         .write_data(write_data),
         .read_data(read_data),
-        .branch(branch)
+        .branch(branch),
+        .jump(jump),
+        .jalr(jalr)
     );
 
 endmodule

@@ -7,24 +7,28 @@ module main_dec
     output logic alu_src,           // 0 = register, 1 = immediate
     output alu_force_e alu_force,
     output imm_src_e imm_src,
-    output logic result_src,        // 0 = alu, 1 = memory
-    output logic branch
+    output result_src_e result_src,
+    output logic branch,
+    output logic jump,
+    output logic jalr
 );
 
     always_comb begin
         reg_write = 1'b0;
         mem_write = 1'b0;
         alu_src = 1'b0;
-        result_src = 1'b0;
+        result_src = RESULT_ALU;
         imm_src = IMM_I;
         alu_force = ALU_FORCE_ADD;
         branch = 1'b0;
+        jump = 1'b0;
+        jalr = 1'b0;
 
         case (op)
             OP_LOAD: begin
                 reg_write = 1'b1;
                 alu_src = 1'b1;
-                result_src = 1'b1;
+                result_src = RESULT_MEM;
                 imm_src = IMM_I;
                 alu_force = ALU_FORCE_ADD;
             end
@@ -47,6 +51,18 @@ module main_dec
             OP_BRANCH: begin
                 imm_src = IMM_B;
                 branch = 1'b1;
+            end
+            OP_JALR: begin
+                reg_write = 1'b1;
+                result_src = RESULT_PC4;
+                imm_src = IMM_I;
+                jalr = 1'b1;
+            end
+            OP_JAL: begin
+                reg_write = 1'b1;
+                result_src = RESULT_PC4;
+                imm_src = IMM_J;
+                jump = 1'b1;
             end
             default: ;
         endcase

@@ -27,10 +27,18 @@ package core_pkg;
         IMM_J
     } imm_src_e;
 
+    typedef enum logic [1:0] {
+        RESULT_ALU,
+        RESULT_MEM,
+        RESULT_PC4
+    } result_src_e;
+
     localparam logic [6:0] OP_LOAD = 7'b0000011;
     localparam logic [6:0] OP_STORE = 7'b0100011;
     localparam logic [6:0] OP_ALU_R = 7'b0110011;
     localparam logic [6:0] OP_ALU_I = 7'b0010011;
     localparam logic [6:0] OP_BRANCH = 7'b1100011;
+    localparam logic [6:0] OP_JALR = 7'b1100111;
+    localparam logic [6:0] OP_JAL = 7'b1101111;
 
 endpackage
