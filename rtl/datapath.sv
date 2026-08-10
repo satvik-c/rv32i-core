@@ -13,6 +13,7 @@ module datapath
     input logic jump,
     input logic jalr,
     input logic illegal_instr,
+    input logic stall,
 
     output logic [31:0] pc,
     input logic [31:0] instr,
@@ -51,7 +52,7 @@ module datapath
 
     always_ff @(posedge clk) begin
         if (!rst_n) pc <= 32'h8000_0000;
-        else if (!illegal_instr) pc <= pc_next;
+        else if (!illegal_instr && !stall) pc <= pc_next;
     end
 
     alu alu_u (
@@ -74,20 +75,20 @@ module datapath
         .a1(instr[19:15]),
         .a2(instr[24:20]),
         .a3(instr[11:7]),
-        .we3(reg_write),
+        .we3(reg_write && !stall),
         .wd3(result),
         .rd1(src_a),
         .rd2(rd2_data)
     );
 
-    branch_logic branch_logic_instance (
+    branch_logic branch_logic_u (
         .funct3(instr[14:12]),
         .src_a(src_a),
         .src_b(rd2_data),
         .take_branch(take_branch)
     );
 
-    lsu lsu_instance (
+    lsu lsu_u (
         .funct3(instr[14:12]),
         .addr(alu_result),
         .rs2_data(rd2_data),

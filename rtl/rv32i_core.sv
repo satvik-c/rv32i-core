@@ -6,32 +6,53 @@ module rv32i_core
 
     output logic core_halted,
 
-    output logic [31:0] pc,
-    input logic [31:0] instr,
-    output logic [31:0] alu_result,
-    output logic [31:0] write_data,
-    output logic [3:0] wstrb,
-    input logic [31:0] read_data,
-    output logic mem_write
+    output logic        imem_req_valid,
+    input  logic        imem_req_ready,
+    output logic [31:0] imem_req_addr,
+    input  logic        imem_rsp_valid,
+    input  logic [31:0] imem_rsp_rdata,
+
+    output logic        dmem_req_valid,
+    input  logic        dmem_req_ready,
+    output logic [31:0] dmem_req_addr,
+    output logic        dmem_req_we,
+    output logic [3:0]  dmem_req_wstrb,
+    output logic [31:0] dmem_req_wdata,
+    input  logic        dmem_rsp_valid,
+    input  logic [31:0] dmem_rsp_rdata
 );
 
     logic reg_write;
     logic alu_src;
-    alu_op_e alu_op;
-    imm_src_e imm_src;
-    result_src_e result_src;
     logic branch;
     logic jump;
     logic jalr;
     logic illegal_instr;
+    logic stall;
+    alu_op_e alu_op;
+    imm_src_e imm_src;
+    result_src_e result_src;
 
+    logic mem_write;
+    logic mem_read;
+    logic [31:0] pc;
+    logic [31:0] alu_result;
+    logic [31:0] write_data;
+    logic [3:0] wstrb;
+
+    assign imem_req_addr = pc;
+    assign dmem_req_addr = alu_result;
+    assign dmem_req_we = mem_write;
+    assign dmem_req_wstrb = wstrb;
+    assign dmem_req_wdata = write_data;
+    assign mem_read = reg_write && result_src == RESULT_MEM;
     assign core_halted = illegal_instr;
 
     controller controller_u (
-        .op(instr[6:0]),
-        .funct3(instr[14:12]),
-        .funct7_5(instr[30]),
-        .op_5(instr[5]),
+        .op(imem_rsp_rdata[6:0]),
+        .funct3(imem_rsp_rdata[14:12]),
+        .funct7_5(imem_rsp_rdata[30]),
+        .op_5(imem_rsp_rdata[5]),
         .reg_write(reg_write),
         .mem_write(mem_write),
         .alu_src(alu_src),
@@ -44,6 +65,21 @@ module rv32i_core
         .illegal_instr(illegal_instr)
     );
 
+    stall_ctrl stall_ctrl_u (
+        .clk(clk),
+        .rst_n(rst_n),
+        .mem_read(mem_read),
+        .mem_write(mem_write),
+        .core_halted(core_halted),
+        .imem_req_ready(imem_req_ready),
+        .imem_rsp_valid(imem_rsp_valid),
+        .dmem_req_ready(dmem_req_ready),
+        .dmem_rsp_valid(dmem_rsp_valid),
+        .imem_req_valid(imem_req_valid),
+        .dmem_req_valid(dmem_req_valid),
+        .stall(stall)
+    );
+
     datapath datapath_u (
         .clk(clk),
         .rst_n(rst_n),
@@ -53,15 +89,16 @@ module rv32i_core
         .imm_src(imm_src),
         .result_src(result_src),
         .pc(pc),
-        .instr(instr),
+        .instr(imem_rsp_rdata),
         .alu_result(alu_result),
         .write_data(write_data),
         .wstrb(wstrb),
-        .read_data(read_data),
+        .read_data(dmem_rsp_rdata),
         .branch(branch),
         .jump(jump),
         .jalr(jalr),
-        .illegal_instr(illegal_instr)
+        .illegal_instr(illegal_instr),
+        .stall(stall)
     );
 
 endmodule

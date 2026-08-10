@@ -7,13 +7,29 @@ module tb_minimal();
 
     logic core_halted;
 
+    logic        imem_req_valid;
+    logic        imem_req_ready;
+    logic [31:0] imem_req_addr;
+    logic        imem_rsp_valid;
+    logic [31:0] imem_rsp_rdata;
+
+    logic        dmem_req_valid;
+    logic        dmem_req_ready;
+    logic [31:0] dmem_req_addr;
+    logic        dmem_req_we;
+    logic [3:0]  dmem_req_wstrb;
+    logic [31:0] dmem_req_wdata;
+    logic        dmem_rsp_valid;
+    logic [31:0] dmem_rsp_rdata;
+
     logic [31:0] pc;
-    logic [31:0] instr;
-    logic [31:0] alu_result;
-    logic [31:0] write_data;
-    logic [3:0] wstrb;
-    logic [31:0] read_data;
-    logic mem_write;
+
+    assign pc = imem_req_addr;
+
+    assign imem_req_ready = 1'b1;
+    assign imem_rsp_valid = 1'b1;
+    assign dmem_req_ready = 1'b1;
+    assign dmem_rsp_valid = 1'b1;
 
     logic [31:0] imem [256];
     logic [31:0] dmem [64];
@@ -157,18 +173,18 @@ module tb_minimal();
         imem[130] = 32'h0de00d93; // addi x27, x0, 222
     end
 
-    assign instr = imem[(pc - 32'h8000_0000) >> 2];
+    assign imem_rsp_rdata = imem[(imem_req_addr - 32'h8000_0000) >> 2];
 
     always_ff @(posedge clk) begin
-        if (mem_write) begin
-            if (wstrb[0]) dmem[alu_result >> 2][7:0] <= write_data[7:0];
-            if (wstrb[1]) dmem[alu_result >> 2][15:8] <= write_data[15:8];
-            if (wstrb[2]) dmem[alu_result >> 2][23:16] <= write_data[23:16];
-            if (wstrb[3]) dmem[alu_result >> 2][31:24] <= write_data[31:24];
+        if (dmem_req_we && dmem_req_valid) begin
+            if (dmem_req_wstrb[0]) dmem[dmem_req_addr >> 2][7:0]   <= dmem_req_wdata[7:0];
+            if (dmem_req_wstrb[1]) dmem[dmem_req_addr >> 2][15:8]  <= dmem_req_wdata[15:8];
+            if (dmem_req_wstrb[2]) dmem[dmem_req_addr >> 2][23:16] <= dmem_req_wdata[23:16];
+            if (dmem_req_wstrb[3]) dmem[dmem_req_addr >> 2][31:24] <= dmem_req_wdata[31:24];
         end
     end
 
-    assign read_data = dmem[alu_result >> 2];
+    assign dmem_rsp_rdata = dmem[dmem_req_addr >> 2];
 
     rv32i_core dut (
         .*
