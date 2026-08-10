@@ -1,5 +1,8 @@
 module datapath
     import core_pkg::*;
+#(
+    parameter logic [31:0] RESET_VECTOR = 32'h8000_0000
+)
 (
     input logic clk,
     input logic rst_n,
@@ -64,7 +67,7 @@ module datapath
     end
 
     always_ff @(posedge clk) begin
-        if (!rst_n) pc <= 32'h8000_0000;
+        if (!rst_n) pc <= RESET_VECTOR;
         else if (!illegal_instr && !stall) pc <= pc_next;
     end
 
@@ -72,9 +75,7 @@ module datapath
         .src_a(src_a),
         .src_b(src_b),
         .alu_op(alu_op),
-        .result(alu_result),
-        .zero(),
-        .sign()
+        .result(alu_result)
     );
 
     imm_gen imm_gen_u (

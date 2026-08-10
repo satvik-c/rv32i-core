@@ -1,5 +1,8 @@
 module rv32i_core
     import core_pkg::*;
+#(
+    parameter logic [31:0] RESET_VECTOR = 32'h8000_0000
+)
 (
     input logic clk,
     input logic rst_n,
@@ -145,7 +148,9 @@ module rv32i_core
         .stall(stall)
     );
 
-    datapath datapath_u (
+    datapath #(
+        .RESET_VECTOR(RESET_VECTOR)
+    ) datapath_u (
         .clk(clk),
         .rst_n(rst_n),
         .reg_write(reg_write),

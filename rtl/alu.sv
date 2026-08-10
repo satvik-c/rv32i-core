@@ -4,13 +4,8 @@ module alu
     input logic [31:0] src_a,
     input logic [31:0] src_b,
     input alu_op_e alu_op,
-    output logic [31:0] result,
-    output logic zero,
-    output logic sign
+    output logic [31:0] result
 );
-
-    assign zero = (result == 32'b0);
-    assign sign = result[31];
 
     always_comb begin
         case (alu_op)
