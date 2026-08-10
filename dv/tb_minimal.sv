@@ -15,7 +15,7 @@ module tb_minimal();
     logic [31:0] read_data;
     logic mem_write;
 
-    logic [31:0] imem [128];
+    logic [31:0] imem [256];
     logic [31:0] dmem [64];
 
     initial begin
@@ -149,6 +149,12 @@ module tb_minimal();
         imem[123] = 32'h0f902a23; // sw x25, 244(x0)
         imem[124] = 32'h0ca05c83; // lhu x25, 202(x0)
         imem[125] = 32'h0f902c23; // sw x25, 248(x0)
+
+        imem[126] = 32'h0000000f; // fence
+        imem[127] = 32'h22b00c93; // addi x25, x0, 555
+        imem[128] = 32'h06f00d93; // addi x27, x0, 111
+        imem[129] = 32'h00000073; // ecall            
+        imem[130] = 32'h0de00d93; // addi x27, x0, 222
     end
 
     assign instr = imem[(pc - 32'h8000_0000) >> 2];
@@ -244,6 +250,12 @@ module tb_minimal();
         assert (dmem[60] == 32'h0000007f) else $error("Assertion failed: dmem[60] != 0x7f (lh half0 (+127))");
         assert (dmem[61] == 32'hffff8010) else $error("Assertion failed: dmem[61] != 0xffff8010 (lh half2 (-32752))");
         assert (dmem[62] == 32'h00008010) else $error("Assertion failed: dmem[62] != 0x8010 (lhu half2 (+32784))");
+
+        // FENCE/ECALL/core_halted Assertions
+        assert (dut.datapath_u.reg_file_u.regs[25] == 32'd555) else $error("Assertion failed: x25 != 555 (fence did not behave as a no-op)");
+        assert (dut.datapath_u.reg_file_u.regs[27] == 32'd111) else $error("Assertion failed: x27 != 111 (instruction after ecall executed -- halt did not freeze pc)");
+        assert (core_halted == 1'b1) else $error("Assertion failed: core_halted != 1 after ecall");
+        assert (pc == 32'h80000204) else $error("Assertion failed: pc != 0x80000204 (did not freeze at the ecall instruction)");
 
         $finish;
     end
