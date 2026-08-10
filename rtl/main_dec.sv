@@ -11,7 +11,7 @@ module main_dec
     output logic branch,
     output logic jump,
     output logic jalr,
-    output logic illegal_instr
+    output logic illegal_opcode
 );
 
     always_comb begin
@@ -24,7 +24,7 @@ module main_dec
         branch = 1'b0;
         jump = 1'b0;
         jalr = 1'b0;
-        illegal_instr = 1'b0;
+        illegal_opcode = 1'b0;
 
         case (op)
             OP_LOAD: begin
@@ -84,9 +84,9 @@ module main_dec
                 // NOP
             end
             OP_SYSTEM: begin
-                illegal_instr = 1'b1; // ECALL/EBREAK halt core for now
+                illegal_opcode = 1'b1; // ECALL/EBREAK halt core for now
             end
-            default: illegal_instr = 1'b1;
+            default: illegal_opcode = 1'b1;
         endcase
     end
 

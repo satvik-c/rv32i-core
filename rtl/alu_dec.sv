@@ -4,11 +4,14 @@ module alu_dec
     input alu_force_e alu_force,
     input logic [2:0] funct3,
     input logic funct7_5,
+    input logic funct7_0,
     input logic op_5,
-    output alu_op_e alu_op
+    output alu_op_e alu_op,
+    output logic illegal_alu_op
 );
 
     always_comb begin
+        illegal_alu_op = 1'b0;
         case (alu_force)
             ALU_FORCE_ADD: alu_op = ALU_ADD;
             ALU_FUNCT_DECODE: begin
@@ -25,6 +28,9 @@ module alu_dec
                     5'b111_?_?: alu_op = ALU_AND;
                     default: alu_op = ALU_ADD;
                 endcase
+                if (funct7_0 && (op_5 || funct3 inside {3'b001, 3'b101})) begin
+                    illegal_alu_op = 1'b1;
+                end
             end
             ALU_FORCE_SRCB: alu_op = ALU_SRCB;
             default: alu_op = ALU_ADD;

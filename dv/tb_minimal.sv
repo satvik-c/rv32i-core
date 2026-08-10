@@ -22,6 +22,29 @@ module tb_minimal();
     logic        dmem_rsp_valid;
     logic [31:0] dmem_rsp_rdata;
 
+    // RVFI Ports
+    logic        rvfi_valid;
+    logic [63:0] rvfi_order;
+    logic [31:0] rvfi_insn;
+    logic        rvfi_trap;
+    logic        rvfi_halt;
+    logic        rvfi_intr;
+    logic [1:0]  rvfi_mode;
+    logic [1:0]  rvfi_ixl;
+    logic [4:0]  rvfi_rs1_addr;
+    logic [4:0]  rvfi_rs2_addr;
+    logic [31:0] rvfi_rs1_rdata;
+    logic [31:0] rvfi_rs2_rdata;
+    logic [4:0]  rvfi_rd_addr;
+    logic [31:0] rvfi_rd_wdata;
+    logic [31:0] rvfi_pc_rdata;
+    logic [31:0] rvfi_pc_wdata;
+    logic [31:0] rvfi_mem_addr;
+    logic [3:0]  rvfi_mem_rmask;
+    logic [3:0]  rvfi_mem_wmask;
+    logic [31:0] rvfi_mem_rdata;
+    logic [31:0] rvfi_mem_wdata;
+
     logic [31:0] pc;
 
     assign pc = imem_req_addr;
@@ -195,6 +218,28 @@ module tb_minimal();
         .*
     );
 
+    // RVFI Monitor
+    logic [63:0] rvfi_order_expected;
+    logic ecall_retired;
+    logic ecall_trap;
+    logic ecall_halt;
+
+    always_ff @(posedge clk) begin
+        if (!rst_n) begin
+            rvfi_order_expected <= 64'b0;
+            ecall_retired <= 1'b0;
+        end else if (rvfi_valid) begin
+            assert (rvfi_order == rvfi_order_expected) else $error("RVFI: rvfi_order expected %0d, got %0d", rvfi_order_expected, rvfi_order);
+            assert (rvfi_pc_rdata == pc) else $error("RVFI: rvfi_pc_rdata != pc");
+            rvfi_order_expected <= rvfi_order_expected + 1;
+            if (rvfi_insn == 32'h00000073) begin
+                ecall_retired <= 1'b1;
+                ecall_trap <= rvfi_trap;
+                ecall_halt <= rvfi_halt;
+            end
+        end
+    end
+
     initial clk = 0;
     always #5 clk = ~clk;
 
@@ -277,6 +322,11 @@ module tb_minimal();
         assert (dut.datapath_u.reg_file_u.regs[27] == 32'd111) else $error("Assertion failed: x27 != 111 (instruction after ecall executed -- halt did not freeze pc)");
         assert (core_halted == 1'b1) else $error("Assertion failed: core_halted != 1 after ecall");
         assert (pc == 32'h80000204) else $error("Assertion failed: pc != 0x80000204 (did not freeze at the ecall instruction)");
+
+        // RVFI Assertions
+        assert (ecall_retired) else $error("RVFI: ecall never retired with rvfi_valid asserted");
+        assert (ecall_trap) else $error("RVFI: ecall retirement missing rvfi_trap");
+        assert (ecall_halt) else $error("RVFI: ecall retirement missing rvfi_halt");
 
         $finish;
     end

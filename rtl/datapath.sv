@@ -22,18 +22,28 @@ module datapath
     output logic [31:0] alu_result,
     output logic [31:0] write_data,
     output logic [3:0] wstrb,
-    input logic [31:0] read_data
+    input logic [31:0] read_data,
+
+    // Ports needed for RVFI
+    output logic [31:0] src_a_rvfi,
+    output logic [31:0] rd2_data_rvfi,
+    output logic [31:0] result_rvfi,
+    output logic [31:0] pc_next_rvfi
 );
 
     logic [31:0] src_a;
+    assign src_a_rvfi = src_a;
     logic [31:0] src_b;
     logic [31:0] imm_ext;
     logic [31:0] result;
+    assign result_rvfi = result;
 
     logic [31:0] pc_next;
+    assign pc_next_rvfi = pc_next;
     logic take_branch;
 
     logic [31:0] rd2_data;
+    assign rd2_data_rvfi = rd2_data;
     logic [31:0] lsu_result;
 
     assign misaligned_fetch = (pc_next[1:0] != 2'b00);
