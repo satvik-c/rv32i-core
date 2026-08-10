@@ -26,10 +26,15 @@ module tb_minimal();
 
     assign pc = imem_req_addr;
 
+    logic imem_rsp_error;
+    logic dmem_rsp_error;
+
     assign imem_req_ready = 1'b1;
     assign imem_rsp_valid = 1'b1;
+    assign imem_rsp_error = 1'b0;
     assign dmem_req_ready = 1'b1;
     assign dmem_rsp_valid = 1'b1;
+    assign dmem_rsp_error = 1'b0;
 
     logic [31:0] imem [256];
     logic [31:0] dmem [64];

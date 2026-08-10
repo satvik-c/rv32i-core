@@ -10,6 +10,7 @@ module rv32i_core
     input  logic        imem_req_ready,
     output logic [31:0] imem_req_addr,
     input  logic        imem_rsp_valid,
+    input  logic        imem_rsp_error,
     input  logic [31:0] imem_rsp_rdata,
 
     output logic        dmem_req_valid,
@@ -19,6 +20,7 @@ module rv32i_core
     output logic [3:0]  dmem_req_wstrb,
     output logic [31:0] dmem_req_wdata,
     input  logic        dmem_rsp_valid,
+    input  logic        dmem_rsp_error,
     input  logic [31:0] dmem_rsp_rdata
 );
 
@@ -29,6 +31,8 @@ module rv32i_core
     logic jalr;
     logic illegal_instr;
     logic stall;
+    logic misaligned_access;
+    logic misaligned_fetch;
     alu_op_e alu_op;
     imm_src_e imm_src;
     result_src_e result_src;
@@ -40,13 +44,13 @@ module rv32i_core
     logic [31:0] write_data;
     logic [3:0] wstrb;
 
-    assign imem_req_addr = pc;
-    assign dmem_req_addr = alu_result;
+    assign imem_req_addr = {pc[31:2], 2'b00};
+    assign dmem_req_addr = {alu_result[31:2], 2'b00};
     assign dmem_req_we = mem_write;
     assign dmem_req_wstrb = wstrb;
     assign dmem_req_wdata = write_data;
     assign mem_read = reg_write && result_src == RESULT_MEM;
-    assign core_halted = illegal_instr;
+    assign core_halted = illegal_instr || imem_rsp_error || dmem_rsp_error;
 
     controller controller_u (
         .op(imem_rsp_rdata[6:0]),
@@ -98,7 +102,9 @@ module rv32i_core
         .jump(jump),
         .jalr(jalr),
         .illegal_instr(illegal_instr),
-        .stall(stall)
+        .stall(stall),
+        .misaligned_access(misaligned_access),
+        .misaligned_fetch(misaligned_fetch)
     );
 
 endmodule

@@ -23,7 +23,7 @@ module stall_ctrl
     mem_state_e dmem_state;
 
     assign imem_req_valid = !core_halted && (imem_state == IDLE);
-    assign dmem_req_valid = (mem_write || mem_read) && (dmem_state == IDLE);
+    assign dmem_req_valid = !core_halted && (mem_write || mem_read) && (dmem_state == IDLE);
     assign stall = ((imem_req_valid || imem_state == WAIT_RSP) && !imem_rsp_valid) || 
                    ((dmem_req_valid || dmem_state == WAIT_RSP) && !dmem_rsp_valid);
 

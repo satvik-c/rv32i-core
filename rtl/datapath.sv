@@ -14,6 +14,8 @@ module datapath
     input logic jalr,
     input logic illegal_instr,
     input logic stall,
+    output logic misaligned_access,
+    output logic misaligned_fetch,
 
     output logic [31:0] pc,
     input logic [31:0] instr,
@@ -34,6 +36,7 @@ module datapath
     logic [31:0] rd2_data;
     logic [31:0] lsu_result;
 
+    assign misaligned_fetch = (pc_next[1:0] != 2'b00);
     assign src_b = (alu_src) ? imm_ext : rd2_data;
     
     always_comb begin
@@ -95,7 +98,8 @@ module datapath
         .dmem_wdata(write_data),
         .dmem_wstrb(wstrb),
         .dmem_rdata(read_data),
-        .result_data(lsu_result)
+        .result_data(lsu_result),
+        .misaligned_access(misaligned_access)
     );
 
 endmodule
