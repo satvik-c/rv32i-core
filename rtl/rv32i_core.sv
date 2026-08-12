@@ -74,7 +74,7 @@ module rv32i_core
     assign dmem_req_we = ctrl.mem_write;
     assign dmem_req_wstrb = wstrb;
     assign dmem_req_wdata = write_data;
-    assign mem_read = ctrl.reg_write && ctrl.result_src == RESULT_MEM;
+    assign mem_read = ctrl.result_src == RESULT_MEM;
 
     // RVFI Port Assignments
     assign rvfi_valid = !core_halted && !stall;
@@ -152,6 +152,7 @@ module rv32i_core
         .clk(clk),
         .rst_n(rst_n),
         .ctrl(ctrl),
+        .mem_read(mem_read),
         .pc_en(pc_en),
         .reg_file_we(reg_file_we),
         .misaligned_access(fault.misaligned_access),

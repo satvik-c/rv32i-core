@@ -2,6 +2,8 @@ module lsu
 (
     input logic [2:0] funct3,
     input logic [31:0] addr,
+    input logic mem_write,
+    input logic mem_read,
     output logic misaligned_access,
 
     input logic [31:0] rs2_data,
@@ -47,16 +49,17 @@ module lsu
             3'b010: result_data = dmem_rdata;
             3'b100: result_data = {24'b0, b};
             3'b101: result_data = {16'b0, h};
-            default: ;
         endcase
     end
 
     always_comb begin
-        case (funct3[1:0])
-            2'b01: misaligned_access = addr[0];
-            2'b10: misaligned_access = (addr[1:0] != 2'b00);
-            default: misaligned_access = 1'b0;
-        endcase
+        misaligned_access = 1'b0;
+        if (mem_write || mem_read) begin
+            case (funct3[1:0])
+                2'b01: misaligned_access = addr[0];
+                2'b10: misaligned_access = (addr[1:0] != 2'b00);
+            endcase
+        end
     end
 
 endmodule

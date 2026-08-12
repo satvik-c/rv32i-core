@@ -8,6 +8,7 @@ module datapath
     input logic rst_n,
 
     input ctrl_t ctrl,
+    input logic mem_read,
     input logic pc_en,
     input logic reg_file_we,
     output logic misaligned_access,
@@ -98,6 +99,8 @@ module datapath
     lsu lsu_u (
         .funct3(instr[14:12]),
         .addr(alu_result),
+        .mem_write(ctrl.mem_write),
+        .mem_read(mem_read),
         .rs2_data(rd2_data),
         .dmem_wdata(write_data),
         .dmem_wstrb(wstrb),
