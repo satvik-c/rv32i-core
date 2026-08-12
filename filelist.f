@@ -10,6 +10,7 @@ rtl/alu_dec.sv
 rtl/branch_logic.sv
 rtl/lsu.sv
 rtl/stall_ctrl.sv
+rtl/fault_ctrl.sv
 rtl/controller.sv
 rtl/datapath.sv
 

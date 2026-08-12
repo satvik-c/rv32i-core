@@ -35,6 +35,26 @@ package core_pkg;
         RESULT_AUIPC
     } result_src_e;
 
+    typedef struct packed {
+        logic reg_write;
+        logic mem_write;
+        logic alu_src;
+        alu_op_e alu_op;
+        imm_src_e imm_src;
+        result_src_e result_src;
+        logic branch;
+        logic jump;
+        logic jalr;
+    } ctrl_t;
+
+    typedef struct packed {
+        logic illegal_instr;
+        logic misaligned_access;
+        logic misaligned_fetch;
+        logic imem_error;
+        logic dmem_error;
+    } fault_t;
+
     localparam logic [6:0] OP_LOAD = 7'b0000011;
     localparam logic [6:0] OP_STORE = 7'b0100011;
     localparam logic [6:0] OP_ALU_R = 7'b0110011;
