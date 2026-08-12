@@ -5,6 +5,7 @@ module stall_ctrl
     input logic mem_read,
     input logic mem_write,
     input logic core_halted,
+    input logic misaligned_access,
     input logic imem_req_ready,
     input logic imem_rsp_valid,
     input logic dmem_req_ready,
@@ -22,8 +23,9 @@ module stall_ctrl
     mem_state_e imem_state;
     mem_state_e dmem_state;
 
-    assign imem_req_valid = !core_halted && (imem_state == IDLE);
-    assign dmem_req_valid = !core_halted && (mem_write || mem_read) && (dmem_state == IDLE);
+    assign imem_req_valid = rst_n && !core_halted && (imem_state == IDLE);
+    assign dmem_req_valid = rst_n && !misaligned_access && !core_halted &&
+                            (mem_write || mem_read) && (dmem_state == IDLE);
     assign stall = ((imem_req_valid || imem_state == WAIT_RSP) && !imem_rsp_valid) || 
                    ((dmem_req_valid || dmem_state == WAIT_RSP) && !dmem_rsp_valid);
 

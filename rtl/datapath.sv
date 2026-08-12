@@ -7,16 +7,9 @@ module datapath
     input logic clk,
     input logic rst_n,
 
-    input logic reg_write,
-    input logic alu_src,
-    input alu_op_e alu_op,
-    input imm_src_e imm_src,
-    input result_src_e result_src,
-    input logic branch,
-    input logic jump,
-    input logic jalr,
-    input logic illegal_instr,
-    input logic stall,
+    input ctrl_t ctrl,
+    input logic pc_en,
+    input logic reg_file_we,
     output logic misaligned_access,
     output logic misaligned_fetch,
 
@@ -50,37 +43,37 @@ module datapath
     logic [31:0] lsu_result;
 
     assign misaligned_fetch = (pc_next[1:0] != 2'b00);
-    assign src_b = (alu_src) ? imm_ext : rd2_data;
+    assign src_b = (ctrl.alu_src) ? imm_ext : rd2_data;
     
     always_comb begin
-        if (result_src == RESULT_ALU) result = alu_result;
-        else if (result_src == RESULT_MEM) result = lsu_result;
-        else if (result_src == RESULT_PC4) result = pc + 32'd4;
-        else if (result_src == RESULT_AUIPC) result = alu_result + pc;
+        if (ctrl.result_src == RESULT_ALU) result = alu_result;
+        else if (ctrl.result_src == RESULT_MEM) result = lsu_result;
+        else if (ctrl.result_src == RESULT_PC4) result = pc + 32'd4;
+        else if (ctrl.result_src == RESULT_AUIPC) result = alu_result + pc;
         else result = 32'd0;
     end
 
     always_comb begin
-        if (jalr) pc_next = (src_a + imm_ext) & ~32'd1;
-        else if ((branch && take_branch) || jump) pc_next = pc + imm_ext;
+        if (ctrl.jalr) pc_next = (src_a + imm_ext) & ~32'd1;
+        else if ((ctrl.branch && take_branch) || ctrl.jump) pc_next = pc + imm_ext;
         else pc_next = pc + 32'd4;
     end
 
     always_ff @(posedge clk) begin
         if (!rst_n) pc <= RESET_VECTOR;
-        else if (!illegal_instr && !stall) pc <= pc_next;
+        else if (pc_en) pc <= pc_next;
     end
 
     alu alu_u (
         .src_a(src_a),
         .src_b(src_b),
-        .alu_op(alu_op),
+        .alu_op(ctrl.alu_op),
         .result(alu_result)
     );
 
     imm_gen imm_gen_u (
         .instr(instr[31:7]),
-        .imm_src(imm_src),
+        .imm_src(ctrl.imm_src),
         .imm_ext(imm_ext)
     );
 
@@ -89,7 +82,7 @@ module datapath
         .a1(instr[19:15]),
         .a2(instr[24:20]),
         .a3(instr[11:7]),
-        .we3(reg_write && !stall),
+        .we3(reg_file_we),
         .wd3(result),
         .rd1(src_a),
         .rd2(rd2_data)
