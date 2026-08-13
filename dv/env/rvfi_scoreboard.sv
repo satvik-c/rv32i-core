@@ -33,7 +33,7 @@ module rvfi_scoreboard
                     errors++;
                 end
             end
-            if (!test_done) count++;
+            count++;
         end
 
         if (errors == 0) $display("SCOREBOARD: PASS (%0d retirements checked)", count);
