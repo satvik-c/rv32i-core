@@ -4,11 +4,20 @@ package rvfi_pkg;
     localparam logic [31:0] SIM_EXIT_HI = 32'h1000_0004;
     localparam logic [31:0] SIM_PUTC = 32'h1000_0008;
     localparam logic [31:0] RESET_VECTOR = 32'h8000_0000;
-
-    // Logic to derive byte-lane masks from instruction since Spike doesn't report it
+    
     localparam logic [6:0] OP_LOAD = 7'b0000011;
     localparam logic [6:0] OP_STORE = 7'b0100011;
+    localparam logic [6:0] OP_ALU_R = 7'b0110011;
+    localparam logic [6:0] OP_ALU_I = 7'b0010011;
+    localparam logic [6:0] OP_BRANCH = 7'b1100011;
+    localparam logic [6:0] OP_JALR = 7'b1100111;
+    localparam logic [6:0] OP_JAL = 7'b1101111;
+    localparam logic [6:0] OP_LUI = 7'b0110111;
+    localparam logic [6:0] OP_AUIPC = 7'b0010111;
+    localparam logic [6:0] OP_FENCE = 7'b0001111;
+    localparam logic [6:0] OP_SYSTEM = 7'b1110011;
 
+    // Logic to derive byte-lane masks from instruction since Spike doesn't report it
     function automatic logic [3:0] decode_mask(logic [31:0] insn, logic [31:0] addr);
         logic [6:0] opcode = insn[6:0];
         logic [1:0] width = insn[13:12]; // lower 2 bits of funct3: 00 = byte, 01 = half, 10 = word
