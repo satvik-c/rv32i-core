@@ -21,5 +21,6 @@ rtl/rv32i_core.sv
 dv/rvfi_pkg.sv
 dv/env/mem_model.sv
 dv/env/rvfi_monitor.sv
+dv/env/mem_monitor.sv
 dv/env/spike_trace_adapter.sv
 dv/env/rvfi_scoreboard.sv

@@ -51,6 +51,8 @@ module tb_top
 
     mailbox #(rvfi_txn) mon2scb = new();
     mailbox #(rvfi_txn) spike2scb = new();
+    mailbox #(rvfi_txn) imem2scb = new();
+    mailbox #(rvfi_txn) dmem2scb = new();
 
     initial clk = 0;
     always #5 clk = ~clk;
@@ -76,6 +78,10 @@ module tb_top
     );
 
     rvfi_monitor rvfi_monitor_u (
+        .*
+    );
+
+    mem_monitor mem_monitor_u (
         .*
     );
 
