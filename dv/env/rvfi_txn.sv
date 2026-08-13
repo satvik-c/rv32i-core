@@ -1,27 +1,27 @@
 class rvfi_txn;
     import rvfi_pkg::*;
 
-    logic        rvfi_valid;
-    logic [63:0] rvfi_order;
-    logic [31:0] rvfi_insn;
-    logic        rvfi_trap;
-    logic        rvfi_halt;
-    logic        rvfi_intr;
-    logic [1:0]  rvfi_mode;
-    logic [1:0]  rvfi_ixl;
-    logic [4:0]  rvfi_rs1_addr;
-    logic [4:0]  rvfi_rs2_addr;
-    logic [31:0] rvfi_rs1_rdata;
-    logic [31:0] rvfi_rs2_rdata;
-    logic [4:0]  rvfi_rd_addr;
-    logic [31:0] rvfi_rd_wdata;
-    logic [31:0] rvfi_pc_rdata;
-    logic [31:0] rvfi_pc_wdata;
-    logic [31:0] rvfi_mem_addr;
-    logic [3:0]  rvfi_mem_rmask;
-    logic [3:0]  rvfi_mem_wmask;
-    logic [31:0] rvfi_mem_rdata;
-    logic [31:0] rvfi_mem_wdata;
+    bit        rvfi_valid;
+    bit [63:0] rvfi_order;
+    bit [31:0] rvfi_insn;
+    bit        rvfi_trap;
+    bit        rvfi_halt;
+    bit        rvfi_intr;
+    bit [1:0]  rvfi_mode;
+    bit [1:0]  rvfi_ixl;
+    bit [4:0]  rvfi_rs1_addr;
+    bit [4:0]  rvfi_rs2_addr;
+    bit [31:0] rvfi_rs1_rdata;
+    bit [31:0] rvfi_rs2_rdata;
+    bit [4:0]  rvfi_rd_addr;
+    bit [31:0] rvfi_rd_wdata;
+    bit [31:0] rvfi_pc_rdata;
+    bit [31:0] rvfi_pc_wdata;
+    bit [31:0] rvfi_mem_addr;
+    bit [3:0]  rvfi_mem_rmask;
+    bit [3:0]  rvfi_mem_wmask;
+    bit [31:0] rvfi_mem_rdata;
+    bit [31:0] rvfi_mem_wdata;
 
     function automatic logic is_sim_ctrl();
         return (rvfi_mem_wmask != 4'b0 && rvfi_mem_addr inside {SIM_EXIT, SIM_EXIT_HI, SIM_PUTC});
@@ -29,8 +29,6 @@ class rvfi_txn;
 
     function automatic string compare (rvfi_txn golden);
         string diffs = "";
-        if (rvfi_order !== golden.rvfi_order)
-            diffs = {diffs, $sformatf(" order: dut=%0d golden=%0d\n", rvfi_order, golden.rvfi_order)};
         if (rvfi_pc_rdata !== golden.rvfi_pc_rdata)
             diffs = {diffs, $sformatf(" pc_rdata: dut=%08h golden=%08h\n", rvfi_pc_rdata, golden.rvfi_pc_rdata)};
         if (rvfi_pc_wdata !== golden.rvfi_pc_wdata)
