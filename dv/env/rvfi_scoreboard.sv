@@ -29,7 +29,7 @@ module rvfi_scoreboard
                 spike2scb.get(txn_spike);
                 diff = txn_mon.compare(txn_spike);
                 if (diff != "") begin
-                    $error("SCOREBOARD: mismatch at retirement");
+                    $error("SCOREBOARD: mismatch at retirement %0d:\n%s", count, diff);
                     errors++;
                 end
             end
