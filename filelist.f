@@ -24,3 +24,8 @@ dv/env/rvfi_monitor.sv
 dv/env/mem_monitor.sv
 dv/env/spike_trace_adapter.sv
 dv/env/rvfi_scoreboard.sv
+
+// Assertions
+dv/sva/memory_sva.sv
+dv/sva/rvfi_sva.sv
+dv/sva/whitebox_sva.sv

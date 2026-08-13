@@ -89,4 +89,18 @@ module tb_top
         .*
     );
 
+    bind rv32i_core memory_sva memory_sva_u (
+        .*
+    );
+
+    bind rv32i_core rvfi_sva rvfi_sva_u (
+        .*
+    );
+
+    bind rv32i_core whitebox_sva #(
+        .RESET_VECTOR(RESET_VECTOR)
+    ) whitebox_sva_u (
+        .*
+    );
+
 endmodule
