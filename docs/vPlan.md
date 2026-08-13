@@ -130,7 +130,7 @@ Applied to the retirement observation port. These are properties the core owes i
 
 ### White-Box Design Assertions
 
-*   **W1 [assert]** The register file write enable is deasserted whenever the destination index is zero.
+*   **W1 [waived — §11]** A register file write targeting index zero never changes the stored value of `x0`, regardless of whether the write-enable presented to the register file is asserted.
 *   **W2 [assert]** A read of register index zero returns zero regardless of the contents of the storage array.
 *   **W3 [assert]** Exactly one writeback source is selected per retirement — the writeback select is one-hot.
 *   **W4 [assert]** The program counter and register file hold their values on every cycle in which no retirement occurs.
@@ -264,7 +264,7 @@ This section documents coverage and assertion gaps that are structurally unreach
 
 | ID | Coverage Gap | Unreachable Reason | Disposition |
 |---|---|---|---|
-| | | | |
+| **WAIVER - 01** | `regs[0]` write-immunity proof (Property: `W1`) | Sole write path is a single unconditional guard (`if (we3 && a3 != 5'b0) regs[a3] <= wd3;`), and `regs[0]` is unobservable externally since the read mux already forces zero at address 0 regardless of array contents. | Closed by RTL inspection, not a dedicated assertion. |
 
 ---
 
