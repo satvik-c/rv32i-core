@@ -42,7 +42,8 @@ module mem_model
     assign imem_rsp_valid = imem_req_valid;
     assign imem_rsp_error = 1'b0;
     always_comb begin
-        if (mem.exists(imem_req_addr[31:2])) imem_rsp_rdata = mem[imem_req_addr[31:2]];
+        if (!$isunknown(imem_req_addr) && mem.exists(imem_req_addr[31:2]))
+            imem_rsp_rdata = mem[imem_req_addr[31:2]];
         else imem_rsp_rdata = 32'hxxxx_xxxx;
     end
 
@@ -51,7 +52,8 @@ module mem_model
     assign dmem_rsp_valid = dmem_req_valid;
     assign dmem_rsp_error = 1'b0;
     always_comb begin
-        if (mem.exists(dmem_req_addr[31:2])) dmem_rsp_rdata = mem[dmem_req_addr[31:2]];
+        if (!$isunknown(dmem_req_addr) && mem.exists(dmem_req_addr[31:2]))
+            dmem_rsp_rdata = mem[dmem_req_addr[31:2]];
         else dmem_rsp_rdata = 32'hxxxx_xxxx;
     end
 
