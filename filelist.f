@@ -16,3 +16,10 @@ rtl/datapath.sv
 
 // Top-Level Core Wrapper
 rtl/rv32i_core.sv
+
+// DV Package and Components
+dv/rvfi_pkg.sv
+dv/env/mem_model.sv
+dv/env/rvfi_monitor.sv
+dv/env/spike_trace_adapter.sv
+dv/env/rvfi_scoreboard.sv

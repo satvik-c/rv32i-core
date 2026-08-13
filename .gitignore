@@ -14,5 +14,5 @@ reports/
 project.sigasi
 *.sigasi/
 
-# Local project guide
-outline.md
+# Spike build artifacts
+build/
