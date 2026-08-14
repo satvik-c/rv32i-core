@@ -2,6 +2,7 @@ RISCV_GCC     := riscv64-unknown-elf-gcc
 RISCV_OBJCOPY := riscv64-unknown-elf-objcopy
 SPIKE         := spike
 DSIM          := dsim
+DCREPORT	  := dcreport -out_dir reports metrics.db
 
 MARCH := rv32i
 MABI  := ilp32
@@ -32,9 +33,10 @@ $(BUILD)/%.spike.log: $(BUILD)/%.elf
 
 # Run DSim on any test passed via TEST=<name>
 run_test: $(BUILD)/$(TEST).hex $(BUILD)/$(TEST).spike.log
-	$(DSIM) -f filelist.f +incdir+dv/env dv/tb_top.sv -top tb_top \
+	$(DSIM) -f filelist.f +incdir+dv/env dv/tb_top.sv -top tb_top -code-cov a \
 		+HEX_FILE=$(BUILD)/$(TEST).hex \
 		+SPIKE_LOG=$(BUILD)/$(TEST).spike.log
+	$(DCREPORT)
 
 test_smoke:
 	@$(MAKE) run_test TEST=test_smoke

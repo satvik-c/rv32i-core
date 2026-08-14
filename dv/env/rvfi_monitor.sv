@@ -26,7 +26,8 @@ module rvfi_monitor
     input logic [31:0]  rvfi_mem_rdata,
     input logic [31:0]  rvfi_mem_wdata,
 
-    input mailbox #(rvfi_txn) mon2scb
+    input mailbox #(rvfi_txn) mon2scb,
+    input mailbox #(rvfi_txn) mon2cov
 );
 
     always_ff @(posedge clk) begin
@@ -54,6 +55,7 @@ module rvfi_monitor
             txn.rvfi_mem_rdata = rvfi_mem_rdata;
             txn.rvfi_mem_wdata = rvfi_mem_wdata;
             mon2scb.put(txn);
+            mon2cov.put(txn);
         end
     end
 

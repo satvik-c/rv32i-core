@@ -50,6 +50,7 @@ module tb_top
     logic [31:0] sim_exit_code;
 
     mailbox #(rvfi_txn) mon2scb = new();
+    mailbox #(rvfi_txn) mon2cov = new();
     mailbox #(rvfi_txn) spike2scb = new();
     mailbox #(rvfi_txn) imem2scb = new();
     mailbox #(rvfi_txn) dmem2scb = new();
@@ -86,6 +87,10 @@ module tb_top
     );
 
     rvfi_scoreboard rvfi_scoreboard_u (
+        .*
+    );
+
+    rvfi_cov rvfi_cov (
         .*
     );
 

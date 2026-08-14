@@ -29,3 +29,6 @@ dv/env/rvfi_scoreboard.sv
 dv/sva/memory_sva.sv
 dv/sva/rvfi_sva.sv
 dv/sva/whitebox_sva.sv
+
+// Coverage Collector
+dv/cov/rvfi_cov.sv
