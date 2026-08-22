@@ -70,7 +70,7 @@ module rvfi_cov
             bins other = { [5'd2 : 5'd31] };
         }
 
-        cp_aliasing : coverpoint alias_flags iff (!(txn.rvfi_insn[6:0] inside {OP_LUI, OP_JAL})) {
+        cp_aliasing : coverpoint alias_flags iff (!(txn.rvfi_insn[6:0] inside {OP_LUI, OP_AUIPC, OP_JAL})) {
             wildcard bins rd_rs1  = { 6'b1????? };
             wildcard bins rd_rs2  = { 6'b?1???? };
             wildcard bins rs1_rs2 = { 6'b??1??? };
