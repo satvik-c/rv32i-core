@@ -27,6 +27,20 @@ module mem_model
 
     logic [31:0] mem [logic [31:0]];
 
+    // Internal IMEM Store Nets
+    logic        back_imem_req_valid;
+    logic [31:0] back_imem_req_payload;
+    logic [31:0] back_imem_rsp_rdata;
+
+    // Internal DMEM Store Nets
+    logic        back_dmem_req_valid;
+    logic [31:0] back_dmem_req_addr;
+    logic        back_dmem_req_we;
+    logic [3:0]  back_dmem_req_wstrb;
+    logic [31:0] back_dmem_req_wdata;
+    logic [31:0] back_dmem_rsp_rdata;
+    logic randomize_active;
+
     initial begin
         string hex_file;
         if ($value$plusargs("HEX_FILE=%s", hex_file)) begin
@@ -35,26 +49,57 @@ module mem_model
             $error("MEM_MODEL: hex_file path not provided");
             $finish;
         end
+        randomize_active = ($test$plusargs("RANDOMIZE_MEM_TIMING")) ? 1'b1 : 1'b0;
     end
 
     // IMEM Read
-    assign imem_req_ready = 1'b1;
-    assign imem_rsp_valid = imem_req_valid;
-    assign imem_rsp_error = 1'b0;
+    mem_timing_agent #(
+        .PAYLOAD_W(32)
+    ) imem_timing_agent (
+        .clk(clk),
+        .rst_n(rst_n),
+        .randomize_active(randomize_active),
+        .req_valid(imem_req_valid),
+        .req_payload(imem_req_addr),
+        .req_ready(imem_req_ready),
+        .rsp_valid(imem_rsp_valid),
+        .rsp_rdata(imem_rsp_rdata),
+        .rsp_error(imem_rsp_error),
+        .back_req_valid(back_imem_req_valid),
+        .back_req_payload(back_imem_req_payload),
+        .back_rsp_rdata(back_imem_rsp_rdata),
+        .back_rsp_error(1'b0)
+    );
+    
     always_comb begin
-        if (!$isunknown(imem_req_addr) && mem.exists(imem_req_addr[31:2]))
-            imem_rsp_rdata = mem[imem_req_addr[31:2]];
-        else imem_rsp_rdata = 32'hxxxx_xxxx;
+        if (!$isunknown(back_imem_req_payload) && mem.exists(back_imem_req_payload[31:2]))
+            back_imem_rsp_rdata = mem[back_imem_req_payload[31:2]];
+        else back_imem_rsp_rdata = 32'hxxxx_xxxx;
     end
 
     // DMEM Read
-    assign dmem_req_ready = 1'b1;
-    assign dmem_rsp_valid = dmem_req_valid;
-    assign dmem_rsp_error = 1'b0;
+    mem_timing_agent #(
+        .PAYLOAD_W(69)
+    ) dmem_timing_agent (
+        .clk(clk),
+        .rst_n(rst_n),
+        .randomize_active(randomize_active),
+        .req_valid(dmem_req_valid),
+        .req_payload({dmem_req_addr, dmem_req_we, dmem_req_wstrb, dmem_req_wdata}),
+        .req_ready(dmem_req_ready),
+        .rsp_valid(dmem_rsp_valid),
+        .rsp_rdata(dmem_rsp_rdata),
+        .rsp_error(dmem_rsp_error),
+        .back_req_valid(back_dmem_req_valid),
+        .back_req_payload({back_dmem_req_addr, back_dmem_req_we, back_dmem_req_wstrb, back_dmem_req_wdata}),
+        .back_rsp_rdata(back_dmem_rsp_rdata),
+        .back_rsp_error(1'b0)
+    );
+    
     always_comb begin
-        if (!$isunknown(dmem_req_addr) && mem.exists(dmem_req_addr[31:2]))
-            dmem_rsp_rdata = mem[dmem_req_addr[31:2]];
-        else dmem_rsp_rdata = 32'hxxxx_xxxx;
+        if (!$isunknown(back_dmem_req_addr) && mem.exists(back_dmem_req_addr[31:2]))
+            back_dmem_rsp_rdata = mem[back_dmem_req_addr[31:2]];
+        else back_dmem_rsp_rdata = 32'hxxxx_xxxx;
     end
 
     // DMEM Write
@@ -63,23 +108,23 @@ module mem_model
             sim_exit_valid <= 1'b0;
             sim_exit_code <= 32'b0;
         end
-        else if (dmem_req_valid && dmem_req_ready && dmem_req_we) begin
-            case (dmem_req_addr)
+        else if (back_dmem_req_valid && back_dmem_req_we) begin
+            case (back_dmem_req_addr)
                 SIM_EXIT: begin
                     sim_exit_valid <= 1'b1;
-                    sim_exit_code <= (dmem_req_wdata >> 1);
+                    sim_exit_code <= (back_dmem_req_wdata >> 1);
                 end
                 SIM_PUTC: begin
-                    $write("%c", dmem_req_wdata[7:0]);
+                    $write("%c", back_dmem_req_wdata[7:0]);
                 end
                 SIM_EXIT_HI: ;
                 default: begin
-                    if (!mem.exists(dmem_req_addr[31:2])) begin
-                        mem[dmem_req_addr[31:2]] = 32'h0000_0000;
+                    if (!mem.exists(back_dmem_req_addr[31:2])) begin
+                        mem[back_dmem_req_addr[31:2]] = 32'h0000_0000;
                     end
                     for (int i = 0; i < 4; i++) begin
-                        if (dmem_req_wstrb[i]) begin
-                            mem[dmem_req_addr[31:2]][8*i +: 8] <= dmem_req_wdata[8*i +: 8];
+                        if (back_dmem_req_wstrb[i]) begin
+                            mem[back_dmem_req_addr[31:2]][8*i +: 8] <= back_dmem_req_wdata[8*i +: 8];
                         end
                     end
                 end

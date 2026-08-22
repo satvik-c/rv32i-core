@@ -90,8 +90,18 @@ module tb_top
         .*
     );
 
-    rvfi_cov rvfi_cov (
+    rvfi_cov rvfi_cov_u (
         .*
+    );
+
+    mem_timing_cov mem_timing_cov_u (
+        .*,
+        .imem_rsp_valid(mem_model_u.imem_timing_agent.rsp_valid),
+        .imem_rsp_latency(mem_model_u.imem_timing_agent.rsp_latency),
+        .imem_req_stalled(mem_model_u.imem_timing_agent.req_stalled),
+        .dmem_rsp_valid(mem_model_u.dmem_timing_agent.rsp_valid),
+        .dmem_rsp_latency(mem_model_u.dmem_timing_agent.rsp_latency),
+        .dmem_req_stalled(mem_model_u.dmem_timing_agent.req_stalled)
     );
 
     bind rv32i_core memory_sva memory_sva_u (

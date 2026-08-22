@@ -20,6 +20,7 @@ rtl/rv32i_core.sv
 // DV Package and Components
 dv/rvfi_pkg.sv
 dv/env/mem_model.sv
+dv/env/mem_timing_agent.sv
 dv/env/rvfi_monitor.sv
 dv/env/mem_monitor.sv
 dv/env/spike_trace_adapter.sv
@@ -32,3 +33,4 @@ dv/sva/whitebox_sva.sv
 
 // Coverage Collector
 dv/cov/rvfi_cov.sv
+dv/cov/mem_timing_cov.sv
