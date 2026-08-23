@@ -265,6 +265,7 @@ This section documents coverage and assertion gaps that are structurally unreach
 | ID | Coverage Gap | Unreachable Reason | Disposition |
 |---|---|---|---|
 | **WAIVER - 01** | `regs[0]` write-immunity proof (Property: `W1`) | Sole write path is a single unconditional guard (`if (we3 && a3 != 5'b0) regs[a3] <= wd3;`), and `regs[0]` is unobservable externally since the read mux already forces zero at address 0 regardless of array contents. | Closed by RTL inspection, not a dedicated assertion. |
+| **WAIVER - 02** | `ALU Instruction × ALU Result Corners` cross covers `add`/`sub`/`addi` only | All ALU ops share one combinational mux with no per-instruction corner logic, and `carry`/`overflow` are only architecturally meaningful for `ADD`/`SUB`/`ADDI`. Shifts are covered separately by `cx_shift_instr_amt`. | Closed by `cp_alu_result`'s existing uncrossed sampling across all ALU ops. |
 
 ---
 

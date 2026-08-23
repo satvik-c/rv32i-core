@@ -83,8 +83,8 @@ module mem_timing_cov
             bins system = { OP_SYSTEM };
         }
 
-        cr_imem_lat : cross cp_instr, cp_imem_lat;
-        cr_dmem_lat : cross cp_instr, cp_dmem_lat;
+        cx_imem_lat : cross cp_instr, cp_imem_lat;
+        cx_dmem_lat : cross cp_instr, cp_dmem_lat;
 
     endgroup
 

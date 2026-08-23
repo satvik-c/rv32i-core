@@ -13,8 +13,8 @@ module rvfi_cov
     } fault_cause_e;
 
     covergroup cg_rvfi with function sample(rvfi_txn txn, bit is_taken, bit is_backward, jump_type_e jump_type,
-                                            bit [5:0] alias_flags, bit[5:0] alu_corners, bit [4:0] shift_amt,
-                                            bit [31:0] imm, pc_src_e pc_src, fault_cause_e fault);
+                                            bit [5:0] alias_flags, bit[5:0] alu_corners, bit alu_funct7b5,
+                                            bit [4:0] shift_amt, bit [31:0] imm, pc_src_e pc_src, fault_cause_e fault);
         
         cp_instr : coverpoint txn.rvfi_insn[6:0] {
             bins load   = { OP_LOAD };
@@ -86,6 +86,12 @@ module rvfi_cov
             wildcard bins max_neg  = { 6'b???1?? };
             wildcard bins carry    = { 6'b????1? };
             wildcard bins overflow = { 6'b?????1 };
+        }
+
+        cp_alu_instr : coverpoint {txn.rvfi_insn[6:0], alu_funct7b5} iff (txn.is_add_sub()) {
+            bins add  = {{ OP_ALU_R, 1'b0 }};
+            bins sub  = {{ OP_ALU_R, 1'b1 }};
+            bins addi = {{ OP_ALU_I, 1'b0 }};
         }
 //                                    opcode              funct3                funct7
         cp_shift_instr : coverpoint {txn.rvfi_insn[6:0], txn.rvfi_insn[14:12], txn.rvfi_insn[31:25]} {
@@ -161,6 +167,15 @@ module rvfi_cov
             bins store_fault = { STORE_FAULT };
         }
 
+        cx_instr_aliasing : cross cp_instr, cp_aliasing;
+        cx_branch_instr_outcome_dir : cross cp_branch_instr, cp_branch_outcome, cp_branch_dir;
+        cx_ls_width_byte_offset_load_ext : cross cp_ls_width, cp_byte_offset, cp_load_ext;
+        cx_shift_instr_amt : cross cp_shift_instr, cp_shift_amt;
+        cx_alu_instr_result : cross cp_alu_instr, cp_alu_result {
+            ignore_bins sub_never_carries =
+                binsof(cp_alu_instr.sub) && binsof(cp_alu_result.carry);
+        }
+
     endgroup
 
     cg_rvfi cg = new();
@@ -175,6 +190,7 @@ module rvfi_cov
         bit [32:0] sum;
         bit [5:0] alu_corners;
         bit alu_carry, alu_overflow;
+        bit alu_funct7b5;
         bit [4:0] shift_amt;
         bit [31:0] imm;
         pc_src_e pc_src;
@@ -210,6 +226,7 @@ module rvfi_cov
             
             alu_carry = 0;
             alu_overflow = 0;
+            alu_funct7b5 = (txn.rvfi_insn[6:0] == OP_ALU_R) ? txn.rvfi_insn[30] : 1'b0;
             if (txn.is_add_sub()) begin
                 sum = txn.is_sub() ? {1'b0, op_a} - {1'b0, op_b} : {1'b0, op_a} + {1'b0, op_b};
                 alu_carry = txn.is_sub() ? 0 : sum[32];
@@ -269,8 +286,8 @@ module rvfi_cov
             end
 
             if (!txn.is_sim_ctrl()) begin
-                cg.sample(txn, is_taken, is_backward, jump_type, alias_flags, alu_corners, shift_amt,
-                            imm, pc_src, fault);
+                cg.sample(txn, is_taken, is_backward, jump_type, alias_flags, alu_corners, alu_funct7b5,
+                            shift_amt, imm, pc_src, fault);
             end
         end
     end
