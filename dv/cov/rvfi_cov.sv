@@ -208,9 +208,13 @@ module rvfi_cov
                 op_b = {{20{txn.rvfi_insn[31]}}, txn.rvfi_insn[31:20]};
             end
             
-            sum = {1'b0, op_a} + {1'b0, op_b};
-            alu_carry = sum[32];
-            alu_overflow = (op_a[31] == op_b[31]) && (sum[31] != op_a[31]);
+            alu_carry = 0;
+            alu_overflow = 0;
+            if (txn.is_add_sub()) begin
+                sum = txn.is_sub() ? {1'b0, op_a} - {1'b0, op_b} : {1'b0, op_a} + {1'b0, op_b};
+                alu_carry = txn.is_sub() ? 0 : sum[32];
+                alu_overflow = (op_a[31] == op_b[31] ^ txn.is_sub()) && (sum[31] != op_a[31]);
+            end
             
             alu_corners[5] = (txn.rvfi_rd_wdata == 32'h0000_0000);
             alu_corners[4] = (txn.rvfi_rd_wdata == 32'hFFFF_FFFF);
@@ -248,6 +252,7 @@ module rvfi_cov
             if (txn.rvfi_trap) begin
                 if (txn.rvfi_insn == 32'h0000_0073) fault = ECALL;
                 else if (txn.rvfi_insn == 32'h0010_0073) fault = EBREAK;
+                else if (txn.is_illegal_funct3()) fault = ILLEGAL_INSN;
                 else if (txn.rvfi_insn[6:0] == OP_LOAD) begin
                     if (txn.rvfi_insn[13:12] == 2'b10 && txn.rvfi_mem_addr[1:0] != 2'b00) fault = LOAD_MISALIGNED;
                     else if (txn.rvfi_insn[13:12] == 2'b01 && txn.rvfi_mem_addr[0] != 1'b0) fault = LOAD_MISALIGNED;

@@ -27,6 +27,22 @@ class rvfi_txn;
         return (rvfi_mem_wmask != 4'b0 && rvfi_mem_addr inside {SIM_EXIT, SIM_EXIT_HI, SIM_PUTC});
     endfunction
 
+    function automatic logic is_add_sub();
+        return (rvfi_insn[6:0] inside {OP_ALU_R, OP_ALU_I} && (rvfi_insn[14:12] == 3'b000));
+    endfunction
+
+    function automatic logic is_sub();
+        return is_add_sub && (rvfi_insn[6:0] == OP_ALU_R) && rvfi_insn[30];
+    endfunction
+
+    function bit is_illegal_funct3();
+        if (rvfi_insn[6:0] == OP_BRANCH) return rvfi_insn[14:12] inside {3'b010, 3'b011};
+        if (rvfi_insn[6:0] == OP_JALR) return rvfi_insn[14:12] != 3'b000;
+        if (rvfi_insn[6:0] == OP_LOAD) return rvfi_insn[14:12] inside {3'b011, 3'b110, 3'b111};
+        if (rvfi_insn[6:0] == OP_STORE) return !(rvfi_insn[14:12] inside {3'b000, 3'b001, 3'b010});
+        return 0;
+    endfunction
+
     function automatic string compare (rvfi_txn golden);
         string diffs = "";
         if (rvfi_pc_rdata !== golden.rvfi_pc_rdata)
