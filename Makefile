@@ -11,6 +11,7 @@ BUILD := build
 SPIKE_MEM := -m0x7f000000:0x01000000 -m0x80000000:0x00300000
 
 TEST ?= test_smoke
+RANDOMIZE ?= 0
 
 .PHONY: all clean run_test test_smoke
 
@@ -35,7 +36,8 @@ $(BUILD)/%.spike.log: $(BUILD)/%.elf
 run_test: $(BUILD)/$(TEST).hex $(BUILD)/$(TEST).spike.log
 	$(DSIM) -f filelist.f +incdir+dv/env dv/tb_top.sv -top tb_top -code-cov a \
 		+HEX_FILE=$(BUILD)/$(TEST).hex \
-		+SPIKE_LOG=$(BUILD)/$(TEST).spike.log
+		+SPIKE_LOG=$(BUILD)/$(TEST).spike.log \
+		$(if $(filter 1,$(RANDOMIZE)),+RANDOMIZE_MEM_TIMING)
 	$(DCREPORT)
 
 test_smoke:
