@@ -61,12 +61,14 @@ module mem_timing_agent
 
             fork
                 begin
-                    repeat (d) @(posedge clk);
-                    delayed_valid <= 1;
-                    delayed_payload <= p;
-                    delayed_latency <= lat;
-                    @(posedge clk);
-                    delayed_valid <= 0;
+                    for (int i = 0; i < d && rst_n; i++) @(posedge clk);
+                    if (rst_n) begin
+                        delayed_valid <= 1;
+                        delayed_payload <= p;
+                        delayed_latency <= lat;
+                        @(posedge clk);
+                        delayed_valid <= 0;
+                    end
                 end
             join_none
         end
