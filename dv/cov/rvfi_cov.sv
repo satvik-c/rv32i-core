@@ -32,7 +32,7 @@ module rvfi_cov
 
         cp_instr_format : coverpoint txn.rvfi_insn[6:0] {
             bins r_type = { OP_ALU_R };
-            bins i_type = { OP_ALU_I, OP_LOAD, OP_JALR };
+            bins i_type = { OP_ALU_I, OP_LOAD, OP_JALR, OP_FENCE, OP_SYSTEM };
             bins s_type = { OP_STORE };
             bins b_type = { OP_BRANCH };
             bins u_type = { OP_LUI, OP_AUIPC };
