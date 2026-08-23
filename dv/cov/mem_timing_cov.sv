@@ -84,6 +84,7 @@ module mem_timing_cov
         }
 
         cr_imem_lat : cross cp_instr, cp_imem_lat;
+        cr_dmem_lat : cross cp_instr, cp_dmem_lat;
 
     endgroup
 
