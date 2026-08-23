@@ -51,7 +51,7 @@ module spike_trace_adapter
             end
             else if ($sscanf(line, "core %d: %d 0x%h (0x%h) mem 0x%h 0x%h",
                              hart, priv, pc, insn, mem_addr, mem_data) == 6 && pc >= RESET_VECTOR) begin
-                if (mem_addr inside {SIM_EXIT, SIM_EXIT_HI, SIM_PUTC}) begin
+                if (mem_addr inside {SIM_EXIT, SIM_EXIT_HI}) begin
                     done = 1'b1;
                 end else begin
                     txn = new();

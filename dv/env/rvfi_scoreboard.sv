@@ -23,7 +23,7 @@ module rvfi_scoreboard
 
         while (!test_done) begin
             mon2scb.get(txn_mon);
-            if (txn_mon.is_sim_ctrl()) begin
+            if (txn_mon.is_sim_exit()) begin
                 #1; // wait for mem_model non-blocking
                 assert (sim_exit_valid == 1'b1 && sim_exit_code == 32'b0);
                 test_done = 1'b1;

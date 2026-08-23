@@ -27,6 +27,10 @@ class rvfi_txn;
         return (rvfi_mem_wmask != 4'b0 && rvfi_mem_addr inside {SIM_EXIT, SIM_EXIT_HI, SIM_PUTC});
     endfunction
 
+    function automatic logic is_sim_exit();
+        return (rvfi_mem_wmask != 4'b0 && rvfi_mem_addr inside {SIM_EXIT, SIM_EXIT_HI});
+    endfunction
+
     function automatic logic is_add_sub();
         return (rvfi_insn[6:0] inside {OP_ALU_R, OP_ALU_I} && (rvfi_insn[14:12] == 3'b000));
     endfunction
