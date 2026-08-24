@@ -77,9 +77,10 @@ test_compiled_c:
 
 RANDOM_DIR := $(BUILD)/random
 RANDOM_LOGS := $(BUILD)/random_logs
+RANDOM_REPORTS := $(REPORTS)/random
 
 test_random_program:
-	@mkdir -p $(RANDOM_DIR) $(RANDOM_LOGS)
+	@mkdir -p $(RANDOM_DIR) $(RANDOM_LOGS) $(RANDOM_REPORTS)
 	@rm -f $(RANDOM_LOGS)/*.log
 	@fail=0; \
 	for s in $$(seq 1 $(NUM_PROGS)); do \
@@ -87,8 +88,10 @@ test_random_program:
 		python3 scripts/gen_random_program.py --seed $$s --count $(NUM_INSTR) -o $(RANDOM_DIR)/prog_$$s.s; \
 		$(MAKE) run_test TEST=random/prog_$$s RANDOMIZE=1 > $(RANDOM_LOGS)/prog_$$s.log 2>&1; \
 		if [ $$? -ne 0 ]; then fail=1; fi; \
+		$(DCREPORT) $(RANDOM_REPORTS)/prog_$$s $(RANDOM_DIR)/prog_$$s.1.metrics.db > /dev/null 2>&1 || true; \
 	done; \
-	scripts/regression_summary.sh $(RANDOM_LOGS) $(REPORTS) || fail=1; \
+	scripts/regression_summary.sh $(RANDOM_LOGS) $(RANDOM_REPORTS) || fail=1; \
+	scripts/coverage_union.sh $(RANDOM_REPORTS); \
 	exit $$fail
 
 test_memory_stall:
