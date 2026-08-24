@@ -4,6 +4,7 @@ package rvfi_pkg;
     localparam logic [31:0] SIM_EXIT_HI = 32'h1000_0004;
     localparam logic [31:0] SIM_PUTC = 32'h1000_0008;
     localparam logic [31:0] RESET_VECTOR = 32'h8000_0000;
+    localparam logic [31:0] ACCESS_FAULT_ADDR = 32'h2000_0000;
     
     localparam logic [6:0] OP_LOAD = 7'b0000011;
     localparam logic [6:0] OP_STORE = 7'b0100011;

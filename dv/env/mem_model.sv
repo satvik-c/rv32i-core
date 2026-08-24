@@ -68,7 +68,7 @@ module mem_model
         .back_req_valid(back_imem_req_valid),
         .back_req_payload(back_imem_req_payload),
         .back_rsp_rdata(back_imem_rsp_rdata),
-        .back_rsp_error(1'b0)
+        .back_rsp_error(back_imem_req_valid && back_imem_req_payload == ACCESS_FAULT_ADDR)
     );
     
     always_comb begin
@@ -93,7 +93,7 @@ module mem_model
         .back_req_valid(back_dmem_req_valid),
         .back_req_payload({back_dmem_req_addr, back_dmem_req_we, back_dmem_req_wstrb, back_dmem_req_wdata}),
         .back_rsp_rdata(back_dmem_rsp_rdata),
-        .back_rsp_error(1'b0)
+        .back_rsp_error(back_dmem_req_valid && back_dmem_req_addr == ACCESS_FAULT_ADDR)
     );
     
     always_comb begin
