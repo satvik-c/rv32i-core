@@ -1,6 +1,10 @@
 module rvfi_scoreboard
     import rvfi_pkg::*;
 (
+    input logic clk,
+    input logic rst_n,
+    input logic core_halted,
+
     input mailbox #(rvfi_txn) mon2scb,
     input mailbox #(rvfi_txn) spike2scb,
     input mailbox #(rvfi_txn) imem2scb,
@@ -8,12 +12,13 @@ module rvfi_scoreboard
 
     input logic sim_exit_valid,
     input logic [31:0] sim_exit_code
-);  
+);
 
     int count, errors;
 
     initial begin
         logic test_done;
+        logic got;
         rvfi_txn txn_mon, txn_spike, txn_imem, txn_dmem;
         string diff;
 
@@ -21,12 +26,24 @@ module rvfi_scoreboard
         errors = 0;
         test_done = 1'b0;
 
+        #1;
+
         while (!test_done) begin
-            mon2scb.get(txn_mon);
-            if (txn_mon.is_sim_exit()) begin
+            got = 1'b0;
+            while (!got && !(rst_n && core_halted)) begin
+                got = mon2scb.try_get(txn_mon);
+                if (!got) @(posedge clk);
+            end
+
+            if (!got) begin
+                // halted with no SIM_EXIT (fault), so trap correctness is an SVA check
+                test_done = 1'b1;
+            end else if (txn_mon.is_sim_exit()) begin
                 #1; // wait for mem_model non-blocking
                 assert (sim_exit_valid == 1'b1 && sim_exit_code == 32'b0);
                 test_done = 1'b1;
+            end else if (txn_mon.rvfi_trap) begin
+                // spike is bare-ISA (no mtvec), so it has no golden entry for a trap
             end else begin
                 // Spike Reference Comparison
                 spike2scb.get(txn_spike);
