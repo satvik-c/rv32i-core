@@ -13,7 +13,9 @@ SPIKE_MEM := -m0x7f000000:0x01000000 -m0x80000000:0x00300000
 TEST ?= test_smoke
 RANDOMIZE ?= 0
 
-.PHONY: all clean run_test test_smoke
+DIRECTED_TESTS := test_smoke test_directed_isa test_control_flow test_memory_access
+
+.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_memory_stall
 
 all: test_smoke
 
@@ -42,6 +44,22 @@ run_test: $(BUILD)/$(TEST).hex $(BUILD)/$(TEST).spike.log
 
 test_smoke:
 	@$(MAKE) run_test TEST=test_smoke
+
+test_directed_isa:
+	@$(MAKE) run_test TEST=test_directed_isa
+
+test_control_flow:
+	@$(MAKE) run_test TEST=test_control_flow
+
+test_memory_access:
+	@$(MAKE) run_test TEST=test_memory_access
+
+# Replays the entire directed suite under randomized memory timing
+test_memory_stall:
+	@for t in $(DIRECTED_TESTS); do \
+		echo "=== $$t (RANDOMIZE=1) ==="; \
+		$(MAKE) run_test TEST=$$t RANDOMIZE=1 || exit 1; \
+	done
 
 clean:
 	rm -rf $(BUILD) dsim_work dsim.log image.so metrics.db dsim.env *.fst *.vcd *.wdb
