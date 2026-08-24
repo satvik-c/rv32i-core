@@ -68,10 +68,10 @@ module rv32i_core
 
     always_ff @(posedge clk) begin
         if (!rst_n) instr_reg <= 32'b0;
-        else if (imem_rsp_valid) instr_reg <= imem_rsp_rdata;
+        else if (imem_rsp_valid && !imem_rsp_error) instr_reg <= imem_rsp_rdata;
     end
 
-    assign instr_word = (imem_rsp_valid) ? imem_rsp_rdata : instr_reg;
+    assign instr_word = (imem_rsp_valid && !imem_rsp_error) ? imem_rsp_rdata : instr_reg;
 
     assign fault.imem_error = imem_rsp_error;
     assign fault.dmem_error = dmem_rsp_error;
