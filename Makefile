@@ -15,9 +15,9 @@ SPIKE_MEM := -m0x7f000000:0x01000000 -m0x80000000:0x00300000
 TEST ?= test_smoke
 RANDOMIZE ?= 0
 
-ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s)))
+ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s sw/tests/*.c)))
 
-.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_memory_stall regression
+.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall regression
 
 all: test_smoke
 
@@ -27,6 +27,11 @@ $(BUILD):
 # Build any .s test into .elf
 $(BUILD)/%.elf: sw/tests/%.s sw/link.ld | $(BUILD)
 	$(RISCV_GCC) -march=$(MARCH) -mabi=$(MABI) -nostdlib -nostartfiles -T sw/link.ld -o $@ $<
+
+# Build any .c test into .elf, linked against the shared C startup.
+$(BUILD)/%.elf: sw/tests/%.c sw/crt0.s sw/link.ld | $(BUILD)
+	$(RISCV_GCC) -march=$(MARCH) -mabi=$(MABI) -nostdlib -nostartfiles -ffreestanding \
+		-msmall-data-limit=0 -T sw/link.ld -o $@ sw/crt0.s $<  # crt0 never sets gp, so disable gp-relative accesses
 
 # Convert any .elf to .hex
 $(BUILD)/%.hex: $(BUILD)/%.elf
@@ -59,6 +64,10 @@ test_control_flow:
 test_memory_access:
 	@$(MAKE) run_test TEST=test_memory_access
 	$(DCREPORT) $(REPORTS)/test_memory_access.$(RANDOMIZE) $(BUILD)/test_memory_access.$(RANDOMIZE).metrics.db
+
+test_compiled_c:
+	@$(MAKE) run_test TEST=test_compiled_c
+	$(DCREPORT) $(REPORTS)/test_compiled_c.$(RANDOMIZE) $(BUILD)/test_compiled_c.$(RANDOMIZE).metrics.db
 
 test_memory_stall:
 	@for t in $(ALL_TESTS); do \
