@@ -2,20 +2,22 @@ RISCV_GCC     := riscv64-unknown-elf-gcc
 RISCV_OBJCOPY := riscv64-unknown-elf-objcopy
 SPIKE         := spike
 DSIM          := dsim
-DCREPORT	  := dcreport -out_dir reports metrics.db
+DCMERGE       := dcmerge
+DCREPORT      := dcreport -out_dir
 
 MARCH := rv32i
 MABI  := ilp32
 BUILD := build
+REPORTS := reports
 
 SPIKE_MEM := -m0x7f000000:0x01000000 -m0x80000000:0x00300000
 
 TEST ?= test_smoke
 RANDOMIZE ?= 0
 
-DIRECTED_TESTS := test_smoke test_directed_isa test_control_flow test_memory_access
+ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s)))
 
-.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_memory_stall
+.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_memory_stall regression
 
 all: test_smoke
 
@@ -37,29 +39,54 @@ $(BUILD)/%.spike.log: $(BUILD)/%.elf
 # Run DSim on any test passed via TEST=<name>
 run_test: $(BUILD)/$(TEST).hex $(BUILD)/$(TEST).spike.log
 	$(DSIM) -f filelist.f +incdir+dv/env dv/tb_top.sv -top tb_top -code-cov a \
+		-cov-db $(BUILD)/$(TEST).$(RANDOMIZE).metrics.db \
 		+HEX_FILE=$(BUILD)/$(TEST).hex \
 		+SPIKE_LOG=$(BUILD)/$(TEST).spike.log \
 		$(if $(filter 1,$(RANDOMIZE)),+RANDOMIZE_MEM_TIMING)
-	$(DCREPORT)
 
 test_smoke:
 	@$(MAKE) run_test TEST=test_smoke
+	$(DCREPORT) $(REPORTS)/test_smoke.$(RANDOMIZE) $(BUILD)/test_smoke.$(RANDOMIZE).metrics.db
 
 test_directed_isa:
 	@$(MAKE) run_test TEST=test_directed_isa
+	$(DCREPORT) $(REPORTS)/test_directed_isa.$(RANDOMIZE) $(BUILD)/test_directed_isa.$(RANDOMIZE).metrics.db
 
 test_control_flow:
 	@$(MAKE) run_test TEST=test_control_flow
+	$(DCREPORT) $(REPORTS)/test_control_flow.$(RANDOMIZE) $(BUILD)/test_control_flow.$(RANDOMIZE).metrics.db
 
 test_memory_access:
 	@$(MAKE) run_test TEST=test_memory_access
+	$(DCREPORT) $(REPORTS)/test_memory_access.$(RANDOMIZE) $(BUILD)/test_memory_access.$(RANDOMIZE).metrics.db
 
-# Replays the entire directed suite under randomized memory timing
 test_memory_stall:
-	@for t in $(DIRECTED_TESTS); do \
+	@for t in $(ALL_TESTS); do \
 		echo "=== $$t (RANDOMIZE=1) ==="; \
 		$(MAKE) run_test TEST=$$t RANDOMIZE=1 || exit 1; \
 	done
+	$(DCMERGE) $(addprefix $(BUILD)/,$(addsuffix .1.metrics.db,$(ALL_TESTS))) -out_db $(BUILD)/test_memory_stall.metrics.db
+	@$(DCREPORT) $(REPORTS)/test_memory_stall $(BUILD)/test_memory_stall.metrics.db || true
+
+REGRESSION_LOGS := $(BUILD)/regression_logs
+
+regression:
+	@mkdir -p $(REGRESSION_LOGS)
+	@rm -f $(REGRESSION_LOGS)/*.log
+	@fail=0; \
+	for t in $(ALL_TESTS); do \
+		for r in 0 1; do \
+			echo "=== $$t RANDOMIZE=$$r ==="; \
+			$(MAKE) run_test TEST=$$t RANDOMIZE=$$r > $(REGRESSION_LOGS)/$$t.$$r.log 2>&1; \
+			if [ $$? -ne 0 ]; then fail=1; fi; \
+			$(DCREPORT) $(REPORTS)/$$t.$$r $(BUILD)/$$t.$$r.metrics.db > /dev/null 2>&1 || true; \
+		done; \
+	done; \
+	echo ""; \
+	scripts/regression_summary.sh $(REGRESSION_LOGS) $(REPORTS) || fail=1; \
+	echo ""; \
+	scripts/coverage_union.sh $(REPORTS); \
+	exit $$fail
 
 clean:
-	rm -rf $(BUILD) dsim_work dsim.log image.so metrics.db dsim.env *.fst *.vcd *.wdb
+	rm -rf $(BUILD) $(REPORTS) dsim_work dsim.log image.so metrics.db dsim.env *.fst *.vcd *.wdb
