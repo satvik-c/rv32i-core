@@ -77,7 +77,7 @@ module rv32i_core
     assign mem_read = ctrl.result_src == RESULT_MEM;
 
     // RVFI Port Assignments
-    assign rvfi_valid = !core_halted && !stall;
+    assign rvfi_valid = rst_n && !core_halted && !stall;
     always_ff @(posedge clk) begin
         if (!rst_n) rvfi_order <= 64'b0;
         else if (rvfi_valid) rvfi_order <= rvfi_order + 1;
