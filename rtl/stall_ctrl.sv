@@ -12,7 +12,8 @@ module stall_ctrl
     input logic dmem_rsp_valid,
     output logic imem_req_valid,
     output logic dmem_req_valid,
-    output logic stall
+    output logic stall,
+    output logic decode_valid
 );
 
     typedef enum logic {
@@ -30,6 +31,9 @@ module stall_ctrl
         else if (!stall) instr_valid <= 1'b0;
         else if (imem_rsp_valid) instr_valid <= 1'b1;
     end
+
+    // High only while instr_word holds a live, not-yet-retired instruction.
+    assign decode_valid = instr_valid || imem_rsp_valid;
 
     assign imem_req_valid = rst_n && !core_halted && (imem_state == IDLE) && !instr_valid;
     assign dmem_req_valid = rst_n && !misaligned_access && !core_halted &&

@@ -58,6 +58,7 @@ module rv32i_core
     logic reg_file_we;
 
     logic mem_read;
+    logic decode_valid;
     logic [31:0] pc;
     logic [31:0] alu_result;
     logic [31:0] write_data;
@@ -151,13 +152,15 @@ module rv32i_core
         .dmem_rsp_valid(dmem_rsp_valid),
         .imem_req_valid(imem_req_valid),
         .dmem_req_valid(dmem_req_valid),
-        .stall(stall)
+        .stall(stall),
+        .decode_valid(decode_valid)
     );
 
     fault_ctrl fault_ctrl_u (
         .clk(clk),
         .rst_n(rst_n),
         .fault(fault),
+        .decode_valid(decode_valid),
         .trap_active(trap_active),
         .core_halted(core_halted),
         .rvfi_trap(rvfi_trap),
