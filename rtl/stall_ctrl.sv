@@ -23,9 +23,18 @@ module stall_ctrl
     mem_state_e imem_state;
     mem_state_e dmem_state;
 
-    assign imem_req_valid = rst_n && !core_halted && (imem_state == IDLE);
+    logic instr_valid;
+
+    always_ff @(posedge clk) begin
+        if (!rst_n) instr_valid <= 1'b0;
+        else if (!stall) instr_valid <= 1'b0;
+        else if (imem_rsp_valid) instr_valid <= 1'b1;
+    end
+
+    assign imem_req_valid = rst_n && !core_halted && (imem_state == IDLE) && !instr_valid;
     assign dmem_req_valid = rst_n && !misaligned_access && !core_halted &&
-                            (mem_write || mem_read) && (dmem_state == IDLE);
+                            (mem_write || mem_read) && (dmem_state == IDLE) && 
+                            (instr_valid || imem_rsp_valid);
     assign stall = ((imem_req_valid || imem_state == WAIT_RSP) && !imem_rsp_valid) || 
                    ((dmem_req_valid || dmem_state == WAIT_RSP) && !dmem_rsp_valid);
 
