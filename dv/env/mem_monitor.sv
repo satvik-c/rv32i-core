@@ -57,7 +57,7 @@ module mem_monitor
                 txn.rvfi_mem_addr = dmem_req.addr;
                 txn.rvfi_mem_wmask = dmem_req.we ? dmem_req.wstrb : 4'b0000;
                 txn.rvfi_mem_rmask = !dmem_req.we ? 4'b1111 : 4'b0000;
-                txn.rvfi_mem_wdata = dmem_req.wdata;
+                txn.rvfi_mem_wdata = dmem_req.we ? dmem_req.wdata : 32'b0;
                 txn.rvfi_mem_rdata = dmem_rsp_rdata;
                 dmem2scb.put(txn);
             end
