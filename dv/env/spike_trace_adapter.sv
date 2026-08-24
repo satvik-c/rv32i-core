@@ -6,8 +6,14 @@ module spike_trace_adapter
 
     task automatic push (ref rvfi_txn pending, input rvfi_txn next, input mailbox #(rvfi_txn) spike2scb);
         if (pending != null && spike2scb != null) begin
-            if (next != null) pending.rvfi_pc_wdata = next.rvfi_pc_rdata;
-            else pending.rvfi_pc_wdata = pending.rvfi_pc_rdata + 32'd4;
+            if (next != null) begin
+                pending.rvfi_pc_wdata = next.rvfi_pc_rdata;
+            end else begin
+                // "+4" is wrong if this was an unconditional jump with no logged target
+                pending.rvfi_pc_wdata = pending.rvfi_pc_rdata + 32'd4;
+                if (pending.rvfi_insn[6:0] inside {OP_JAL, OP_JALR})
+                    pending.rvfi_pc_wdata_unknown = 1'b1;
+            end
             spike2scb.put(pending);
         end
     endtask

@@ -23,6 +23,9 @@ class rvfi_txn;
     bit [31:0] rvfi_mem_rdata;
     bit [31:0] rvfi_mem_wdata;
 
+    // set by spike_trace_adapter: true jump target unknown, skip in compare()
+    bit rvfi_pc_wdata_unknown;
+
     function automatic logic is_sim_ctrl();
         return (rvfi_mem_wmask != 4'b0 && rvfi_mem_addr inside {SIM_EXIT, SIM_EXIT_HI, SIM_PUTC});
     endfunction
@@ -51,7 +54,7 @@ class rvfi_txn;
         string diffs = "";
         if (rvfi_pc_rdata !== golden.rvfi_pc_rdata)
             diffs = {diffs, $sformatf(" pc_rdata: dut=%08h golden=%08h\n", rvfi_pc_rdata, golden.rvfi_pc_rdata)};
-        if (rvfi_pc_wdata !== golden.rvfi_pc_wdata)
+        if (!golden.rvfi_pc_wdata_unknown && rvfi_pc_wdata !== golden.rvfi_pc_wdata)
             diffs = {diffs, $sformatf(" pc_wdata: dut=%08h golden=%08h\n", rvfi_pc_wdata, golden.rvfi_pc_wdata)};
         if (rvfi_insn !== golden.rvfi_insn)
             diffs = {diffs, $sformatf(" insn: dut=%08h golden=%08h\n", rvfi_insn, golden.rvfi_insn)};
