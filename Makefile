@@ -14,10 +14,12 @@ SPIKE_MEM := -m0x7f000000:0x01000000 -m0x80000000:0x00300000
 
 TEST ?= test_smoke
 RANDOMIZE ?= 0
+NUM_PROGS ?= 500
+NUM_INSTR ?= 2000
 
 ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s sw/tests/*.c)))
 
-.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall regression
+.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall test_random_program regression
 
 all: test_smoke
 
@@ -32,6 +34,10 @@ $(BUILD)/%.elf: sw/tests/%.s sw/link.ld | $(BUILD)
 $(BUILD)/%.elf: sw/tests/%.c sw/crt0.s sw/link.ld | $(BUILD)
 	$(RISCV_GCC) -march=$(MARCH) -mabi=$(MABI) -nostdlib -nostartfiles -ffreestanding \
 		-msmall-data-limit=0 -T sw/link.ld -o $@ sw/crt0.s $<  # crt0 never sets gp, so disable gp-relative accesses
+
+# Build a generated random program into .elf
+$(BUILD)/random/%.elf: $(BUILD)/random/%.s sw/link.ld
+	$(RISCV_GCC) -march=$(MARCH) -mabi=$(MABI) -nostdlib -nostartfiles -T sw/link.ld -o $@ $<
 
 # Convert any .elf to .hex
 $(BUILD)/%.hex: $(BUILD)/%.elf
@@ -68,6 +74,22 @@ test_memory_access:
 test_compiled_c:
 	@$(MAKE) run_test TEST=test_compiled_c
 	$(DCREPORT) $(REPORTS)/test_compiled_c.$(RANDOMIZE) $(BUILD)/test_compiled_c.$(RANDOMIZE).metrics.db
+
+RANDOM_DIR := $(BUILD)/random
+RANDOM_LOGS := $(BUILD)/random_logs
+
+test_random_program:
+	@mkdir -p $(RANDOM_DIR) $(RANDOM_LOGS)
+	@rm -f $(RANDOM_LOGS)/*.log
+	@fail=0; \
+	for s in $$(seq 1 $(NUM_PROGS)); do \
+		echo "=== random/prog_$$s (seed=$$s, count=$(NUM_INSTR)) ==="; \
+		python3 scripts/gen_random_program.py --seed $$s --count $(NUM_INSTR) -o $(RANDOM_DIR)/prog_$$s.s; \
+		$(MAKE) run_test TEST=random/prog_$$s RANDOMIZE=1 > $(RANDOM_LOGS)/prog_$$s.log 2>&1; \
+		if [ $$? -ne 0 ]; then fail=1; fi; \
+	done; \
+	scripts/regression_summary.sh $(RANDOM_LOGS) $(REPORTS) || fail=1; \
+	exit $$fail
 
 test_memory_stall:
 	@for t in $(ALL_TESTS); do \
