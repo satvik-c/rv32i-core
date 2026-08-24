@@ -45,7 +45,7 @@ module spike_trace_adapter
                 txn.rvfi_insn      = insn;
                 txn.rvfi_rd_addr   = rd_idx;
                 txn.rvfi_rd_wdata  = rd_val;
-                txn.rvfi_mem_addr  = mem_addr;
+                txn.rvfi_mem_addr  = {mem_addr[31:2], 2'b00};
                 txn.rvfi_mem_rmask = decode_mask(insn, mem_addr);
                 if (txn.rvfi_mem_rmask == 4'b1111) txn.rvfi_mem_rdata = rd_val;
             end
@@ -57,7 +57,7 @@ module spike_trace_adapter
                     txn = new();
                     txn.rvfi_pc_rdata  = pc;
                     txn.rvfi_insn      = insn;
-                    txn.rvfi_mem_addr  = mem_addr;
+                    txn.rvfi_mem_addr  = {mem_addr[31:2], 2'b00};
                     txn.rvfi_mem_wmask = decode_mask(insn, mem_addr);
                     txn.rvfi_mem_wdata = mem_data << (8 * mem_addr[1:0]);
                 end
