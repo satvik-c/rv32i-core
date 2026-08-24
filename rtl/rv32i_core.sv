@@ -88,10 +88,18 @@ module rv32i_core
 
     // RVFI Port Assignments
     assign rvfi_valid = rst_n && !core_halted && !stall;
+    logic [63:0] retired_count;
+    logic [63:0] last_order;
     always_ff @(posedge clk) begin
-        if (!rst_n) rvfi_order <= 64'b0;
-        else if (rvfi_valid) rvfi_order <= rvfi_order + 1;
+        if (!rst_n) begin
+            retired_count <= 64'b0;
+            last_order <= 64'b0;
+        end else if (rvfi_valid) begin
+            retired_count <= retired_count + 64'b1;
+            last_order <= retired_count;
+        end
     end
+    assign rvfi_order = rvfi_valid ? retired_count : last_order;
     assign rvfi_insn = instr_word;
     // rvfi_trap and rvfi_halt taken care of by fault_ctrl
     assign rvfi_intr = 1'b0;
