@@ -291,4 +291,4 @@ This log is a living artifact, populated during bring-up and regression. Each en
 
 | ID & Type | Observed Symptom | Root Cause & Resolution | Affected File |
 |---|---|---|---|
-| | | | |
+| **BUG-01 [RTL]** | Under `RANDOMIZE=1`, `W9` (illegal-instr mismatch) and `B1_IMEM` (valid dropped before ready) failed intermittently. | Controller, RVFI, and datapath decoded `imem_rsp_rdata` combinationally with no gate on `imem_rsp_valid`, so a pending-but-unanswered fetch could present stale/garbage data as the current instruction, occasionally decoding as illegal and halting the core mid-request. Added `instr_word`, a live-bus/held-register mux gated on `imem_rsp_valid`, and routed all consumers through it. | `rtl/rv32i_core.sv`, `dv/sva/whitebox_sva.sv` |

@@ -63,6 +63,16 @@ module rv32i_core
     logic [31:0] write_data;
     logic [3:0] wstrb;
 
+    logic [31:0] instr_reg;
+    logic [31:0] instr_word;
+
+    always_ff @(posedge clk) begin
+        if (!rst_n) instr_reg <= 32'b0;
+        else if (imem_rsp_valid) instr_reg <= imem_rsp_rdata;
+    end
+
+    assign instr_word = (imem_rsp_valid) ? imem_rsp_rdata : instr_reg;
+
     assign fault.imem_error = imem_rsp_error;
     assign fault.dmem_error = dmem_rsp_error;
 
@@ -82,7 +92,7 @@ module rv32i_core
         if (!rst_n) rvfi_order <= 64'b0;
         else if (rvfi_valid) rvfi_order <= rvfi_order + 1;
     end
-    assign rvfi_insn = imem_rsp_rdata;
+    assign rvfi_insn = instr_word;
     // rvfi_trap and rvfi_halt taken care of by fault_ctrl
     assign rvfi_intr = 1'b0;
     assign rvfi_mode = 2'd3;
@@ -93,11 +103,11 @@ module rv32i_core
     assign rs1_read = !(ctrl.imm_src inside {IMM_U, IMM_J});
     assign rs2_read = !(ctrl.imm_src inside {IMM_I, IMM_U, IMM_J});
     assign rd_write = !(ctrl.imm_src inside {IMM_S, IMM_B});
-    assign rvfi_rs1_addr = (rs1_read) ? imem_rsp_rdata[19:15] : 5'b0;
-    assign rvfi_rs2_addr = (rs2_read) ? imem_rsp_rdata[24:20] : 5'b0;
+    assign rvfi_rs1_addr = (rs1_read) ? instr_word[19:15] : 5'b0;
+    assign rvfi_rs2_addr = (rs2_read) ? instr_word[24:20] : 5'b0;
     assign rvfi_rs1_rdata = (rvfi_rs1_addr != 5'b0) ? src_a_rvfi : 32'b0;
     assign rvfi_rs2_rdata = (rvfi_rs2_addr != 5'b0) ? rd2_data_rvfi : 32'b0;
-    assign rvfi_rd_addr = (rd_write && !rvfi_trap) ? imem_rsp_rdata[11:7] : 5'b0;
+    assign rvfi_rd_addr = (rd_write && !rvfi_trap) ? instr_word[11:7] : 5'b0;
     assign rvfi_rd_wdata = (rvfi_rd_addr != 5'b0) ? result_rvfi : 32'b0;
 
     logic [31:0] pc_next_rvfi;
@@ -111,11 +121,11 @@ module rv32i_core
     // End RVFI Port Assignments
 
     controller controller_u (
-        .op(imem_rsp_rdata[6:0]),
-        .funct3(imem_rsp_rdata[14:12]),
-        .funct7_5(imem_rsp_rdata[30]),
-        .funct7_0(imem_rsp_rdata[25]),
-        .op_5(imem_rsp_rdata[5]),
+        .op(instr_word[6:0]),
+        .funct3(instr_word[14:12]),
+        .funct7_5(instr_word[30]),
+        .funct7_0(instr_word[25]),
+        .op_5(instr_word[5]),
         .ctrl(ctrl),
         .illegal_instr(fault.illegal_instr)
     );
@@ -158,7 +168,7 @@ module rv32i_core
         .misaligned_access(fault.misaligned_access),
         .misaligned_fetch(fault.misaligned_fetch),
         .pc(pc),
-        .instr(imem_rsp_rdata),
+        .instr(instr_word),
         .alu_result(alu_result),
         .write_data(write_data),
         .wstrb(wstrb),
