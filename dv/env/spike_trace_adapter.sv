@@ -68,6 +68,15 @@ module spike_trace_adapter
                     txn.rvfi_mem_wdata = mem_data << (8 * mem_addr[1:0]);
                 end
             end
+            else if ($sscanf(line, "core %d: %d 0x%h (0x%h) mem 0x%h",
+                              hart, priv, pc, insn, mem_addr) == 5 && pc >= RESET_VECTOR) begin
+                txn = new();
+                txn.rvfi_pc_rdata  = pc;
+                txn.rvfi_insn      = insn;
+                txn.rvfi_mem_addr  = {mem_addr[31:2], 2'b00};
+                txn.rvfi_mem_rmask = decode_mask(insn, mem_addr);
+                txn.rvfi_mem_rdata_unknown = 1'b1;
+            end
             else if ($sscanf(line, "core %d: %d 0x%h (0x%h) x%d 0x%h",
                              hart, priv, pc, insn, rd_idx, rd_val) == 6 && pc >= RESET_VECTOR) begin
                 txn = new();
