@@ -131,7 +131,11 @@ module rvfi_cov
             bins w = { 2'b10 };
         }
 
-        cp_byte_offset : coverpoint txn.rvfi_mem_addr[1:0] iff (txn.rvfi_insn[6:0] inside {OP_LOAD, OP_STORE}) {
+        // rvfi_mem_addr is word-aligned; derive true offset from the mask instead
+        cp_byte_offset : coverpoint (txn.rvfi_mem_rmask[0] || txn.rvfi_mem_wmask[0] ? 2'd0 :
+                                      txn.rvfi_mem_rmask[1] || txn.rvfi_mem_wmask[1] ? 2'd1 :
+                                      txn.rvfi_mem_rmask[2] || txn.rvfi_mem_wmask[2] ? 2'd2 : 2'd3)
+            iff (txn.rvfi_insn[6:0] inside {OP_LOAD, OP_STORE}) {
             bins offset_0 = { 2'd0 };
             bins offset_1 = { 2'd1 };
             bins offset_2 = { 2'd2 };
@@ -169,7 +173,12 @@ module rvfi_cov
 
         cx_instr_aliasing : cross cp_instr, cp_aliasing;
         cx_branch_instr_outcome_dir : cross cp_branch_instr, cp_branch_outcome, cp_branch_dir;
-        cx_ls_width_byte_offset_load_ext : cross cp_ls_width, cp_byte_offset, cp_load_ext;
+        // word has no ext variant and can't be at a non-zero offset; halfword can't be at an odd offset
+        cx_ls_width_byte_offset_load_ext : cross cp_ls_width, cp_byte_offset, cp_load_ext {
+            ignore_bins word_unreachable = binsof(cp_ls_width.w);
+            ignore_bins half_misaligned = binsof(cp_ls_width.h) &&
+                (binsof(cp_byte_offset.offset_1) || binsof(cp_byte_offset.offset_3));
+        }
         cx_shift_instr_amt : cross cp_shift_instr, cp_shift_amt;
         cx_alu_instr_result : cross cp_alu_instr, cp_alu_result {
             ignore_bins sub_never_carries =
