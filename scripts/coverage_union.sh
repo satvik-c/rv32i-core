@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Usage: coverage_union.sh <reports_dir>
+# Usage: coverage_union.sh <reports_dir> [<reports_dir> ...]
 # Per-coverpoint/cross MAX % across all reports -- a lower bound on true
 # union coverage, since dcreport has no per-bin data to add non-overlapping hits.
 set -euo pipefail
-REPORTS_DIR="$1"
 
+for REPORTS_DIR in "$@"; do
 for d in "$REPORTS_DIR"/*/; do
     idx="${d}index.html"
     [ -f "$idx" ] || continue
@@ -19,6 +19,7 @@ for d in "$REPORTS_DIR"/*/; do
         grep -oE '<tr><td>[a-zA-Z0-9_]+</td><td>[0-9.]+</td></tr>' "$d$page" 2>/dev/null \
             | sed -E "s#<tr><td>([a-zA-Z0-9_]+)</td><td>([0-9.]+)</td></tr>#${group}.\1 \2#"
     done
+done
 done | awk '
 {
     if (!($1 in maxv) || $2+0 > maxv[$1]+0) maxv[$1] = $2

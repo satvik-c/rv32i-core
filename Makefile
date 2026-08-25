@@ -23,7 +23,7 @@ ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s sw/tests/*.c)))
 
 FORMAL_DIR := formal/riscv-formal/cores/rv32i-core
 
-.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall test_random_program regression formal
+.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall test_random_program regression formal coverage_signoff
 
 all: test_smoke
 
@@ -125,6 +125,10 @@ regression:
 	echo ""; \
 	scripts/coverage_union.sh $(REPORTS); \
 	exit $$fail
+
+# Unions regression + test_random_program reports; run both first
+coverage_signoff:
+	scripts/coverage_union.sh $(REPORTS) $(RANDOM_REPORTS)
 
 formal:
 	@./formal/setup.sh
