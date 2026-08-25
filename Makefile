@@ -1,3 +1,5 @@
+SHELL := bash
+
 RISCV_GCC     := riscv64-unknown-elf-gcc
 RISCV_OBJCOPY := riscv64-unknown-elf-objcopy
 SPIKE         := spike
@@ -19,7 +21,9 @@ NUM_INSTR ?= 2000
 
 ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s sw/tests/*.c)))
 
-.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall test_random_program regression
+FORMAL_DIR := formal/riscv-formal/cores/rv32i-core
+
+.PHONY: all clean run_test test_smoke test_directed_isa test_control_flow test_memory_access test_compiled_c test_memory_stall test_random_program regression formal
 
 all: test_smoke
 
@@ -120,6 +124,27 @@ regression:
 	scripts/regression_summary.sh $(REGRESSION_LOGS) $(REPORTS) || fail=1; \
 	echo ""; \
 	scripts/coverage_union.sh $(REPORTS); \
+	exit $$fail
+
+formal:
+	@./formal/setup.sh
+	@./formal/build.sh
+	@cd $(FORMAL_DIR) && rm -rf checks && python3 ../../checks/genchecks.py
+	@fail=0; \
+	cd $(FORMAL_DIR)/checks && \
+	for f in *.sby; do \
+		name=$${f%.sby}; \
+		echo "=== $$name ==="; \
+		sby -f "$$f" > "$$name.runlog" 2>&1 & \
+		while [ "$$(jobs -r | wc -l)" -ge 8 ]; do wait -n; done; \
+	done; \
+	wait; \
+	for f in *.sby; do \
+		name=$${f%.sby}; \
+		status=$$(cat "$$name/status" 2>/dev/null || echo "NO_STATUS"); \
+		echo "$$name: $$status"; \
+		echo "$$status" | grep -q "^PASS" || fail=1; \
+	done; \
 	exit $$fail
 
 clean:
