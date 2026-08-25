@@ -95,7 +95,7 @@ test_random_program:
 		$(DCREPORT) $(RANDOM_REPORTS)/prog_$$s $(RANDOM_DIR)/prog_$$s.1.metrics.db > /dev/null 2>&1 || true; \
 	done; \
 	scripts/regression_summary.sh $(RANDOM_LOGS) $(RANDOM_REPORTS) || fail=1; \
-	scripts/coverage_union.sh $(RANDOM_REPORTS); \
+	scripts/coverage_union.py $(RANDOM_DIR)/*.metrics.db; \
 	exit $$fail
 
 test_memory_stall:
@@ -123,12 +123,12 @@ regression:
 	echo ""; \
 	scripts/regression_summary.sh $(REGRESSION_LOGS) $(REPORTS) || fail=1; \
 	echo ""; \
-	scripts/coverage_union.sh $(REPORTS); \
+	scripts/coverage_union.py $(BUILD)/*.metrics.db; \
 	exit $$fail
 
-# Unions regression + test_random_program reports; run both first
+# Unions regression + test_random_program metrics; run both first
 coverage_signoff:
-	scripts/coverage_union.sh $(REPORTS) $(RANDOM_REPORTS)
+	scripts/coverage_union.py $(BUILD)/*.metrics.db $(RANDOM_DIR)/*.metrics.db
 
 formal:
 	@./formal/setup.sh
