@@ -19,7 +19,7 @@ module main_dec
         mem_write = 1'b0;
         alu_src = 1'b0;
         result_src = RESULT_ALU;
-        imm_src = IMM_I;
+        imm_src = IMM_NONE;
         alu_force = ALU_FORCE_ADD;
         branch = 1'b0;
         jump = 1'b0;
@@ -42,6 +42,7 @@ module main_dec
             end
             OP_ALU_R: begin
                 reg_write = 1'b1;
+                imm_src = IMM_R;
                 alu_force = ALU_FUNCT_DECODE;
             end
             OP_ALU_I: begin

@@ -13,7 +13,8 @@ module stall_ctrl
     output logic imem_req_valid,
     output logic dmem_req_valid,
     output logic stall,
-    output logic decode_valid
+    output logic decode_valid,
+    output logic instr_valid
 );
 
     typedef enum logic {
@@ -23,8 +24,6 @@ module stall_ctrl
 
     mem_state_e imem_state;
     mem_state_e dmem_state;
-
-    logic instr_valid;
 
     always_ff @(posedge clk) begin
         if (!rst_n) instr_valid <= 1'b0;

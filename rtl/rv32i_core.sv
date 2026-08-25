@@ -59,6 +59,7 @@ module rv32i_core
 
     logic mem_read;
     logic decode_valid;
+    logic instr_valid;
     logic [31:0] pc;
     logic [31:0] alu_result;
     logic [31:0] write_data;
@@ -72,10 +73,11 @@ module rv32i_core
         else if (imem_rsp_valid && !imem_rsp_error) instr_reg <= imem_rsp_rdata;
     end
 
-    assign instr_word = (imem_rsp_valid && !imem_rsp_error) ? imem_rsp_rdata : instr_reg;
+    assign instr_word = (imem_rsp_valid && !imem_rsp_error) ? imem_rsp_rdata :
+                        (instr_valid)                       ? instr_reg      : 32'b0;
 
-    assign fault.imem_error = imem_rsp_error;
-    assign fault.dmem_error = dmem_rsp_error;
+    assign fault.imem_error = imem_rsp_valid && imem_rsp_error;
+    assign fault.dmem_error = dmem_rsp_valid && dmem_rsp_error;
 
     assign pc_en = !trap_active && !core_halted && !stall;
     assign reg_file_we = ctrl.reg_write && !trap_active && !core_halted && !stall;
@@ -109,9 +111,9 @@ module rv32i_core
 
     logic rs1_read, rs2_read, rd_write;
     logic [31:0] src_a_rvfi, rd2_data_rvfi, result_rvfi;
-    assign rs1_read = !(ctrl.imm_src inside {IMM_U, IMM_J});
-    assign rs2_read = !(ctrl.imm_src inside {IMM_I, IMM_U, IMM_J});
-    assign rd_write = !(ctrl.imm_src inside {IMM_S, IMM_B});
+    assign rs1_read = !(ctrl.imm_src inside {IMM_U, IMM_J, IMM_NONE});
+    assign rs2_read = !(ctrl.imm_src inside {IMM_I, IMM_U, IMM_J, IMM_NONE});
+    assign rd_write = !(ctrl.imm_src inside {IMM_S, IMM_B, IMM_NONE});
     assign rvfi_rs1_addr = (rs1_read) ? instr_word[19:15] : 5'b0;
     assign rvfi_rs2_addr = (rs2_read) ? instr_word[24:20] : 5'b0;
     assign rvfi_rs1_rdata = (rvfi_rs1_addr != 5'b0) ? src_a_rvfi : 32'b0;
@@ -153,7 +155,8 @@ module rv32i_core
         .imem_req_valid(imem_req_valid),
         .dmem_req_valid(dmem_req_valid),
         .stall(stall),
-        .decode_valid(decode_valid)
+        .decode_valid(decode_valid),
+        .instr_valid(instr_valid)
     );
 
     fault_ctrl fault_ctrl_u (

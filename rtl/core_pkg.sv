@@ -25,7 +25,9 @@ package core_pkg;
         IMM_S,
         IMM_B,
         IMM_U,
-        IMM_J
+        IMM_J,
+        IMM_R,
+        IMM_NONE
     } imm_src_e;
 
     typedef enum logic [1:0] {
