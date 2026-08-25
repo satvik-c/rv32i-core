@@ -119,6 +119,29 @@ module rvfi_wrapper (
         end
     end
 
+    // Bound req-to-resp latency: unconstrained stalls make liveness unprovable
+    localparam MAX_MEM_LATENCY = 8;
+
+    logic [3:0] imem_wait;
+    always_ff @(posedge clock) begin
+        if (reset || imem_rsp_valid) imem_wait <= 0;
+        else if (imem_req_valid || imem_inflight) imem_wait <= imem_wait + 1;
+    end
+    always_comb assume(imem_wait < MAX_MEM_LATENCY);
+
+    logic [3:0] dmem_wait;
+    always_ff @(posedge clock) begin
+        if (reset || dmem_rsp_valid) dmem_wait <= 0;
+        else if (dmem_req_valid || dmem_inflight) dmem_wait <= dmem_wait + 1;
+    end
+    always_comb assume(dmem_wait < MAX_MEM_LATENCY);
+
+    // Access faults are out of scope here (see vPlan 7/10); keep memory fault-free
+    always_comb begin
+        assume(imem_rsp_error == 0);
+        assume(dmem_rsp_error == 0);
+    end
+
     // Assume requests don't change while waiting for ready (rule 2)
     always_ff @(posedge clock) begin
         if (!reset && $past(imem_req_valid) && !$past(imem_req_ready)) begin

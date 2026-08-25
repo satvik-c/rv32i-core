@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # Converts rtl/*.sv to plain Verilog via sv2v, since SymbiYosys's Yosys
-# frontend can't parse the SV constructs the RTL uses. checks.cfg reads
-# this output, never rtl/*.sv directly.
+# frontend can't parse the SV constructs the RTL uses.
+# rvfi_wrapper.sv is NOT included: sv2v silently drops assume()/assert().
+# checks.cfg reads it directly as SV instead.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -28,26 +29,11 @@ RTL_FILES=(
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# RVFI_OUTPUTS etc come from rvfi_macros.vh; defines mirror checks.cfg
-cat > "$BUILD_DIR/rvfi_defines.vh" <<'EOF'
-`define RISCV_FORMAL
-`define RISCV_FORMAL_NRET 1
-`define RISCV_FORMAL_XLEN 32
-`define RISCV_FORMAL_ILEN 32
-`define RISCV_FORMAL_ALIGNED_MEM
-`define RISCV_FORMAL_MEM_FAULT
-`include "rvfi_macros.vh"
-EOF
-
 sources=()
 for f in "${RTL_FILES[@]}"; do
     sources+=("$REPO_ROOT/rtl/$f")
 done
-sources+=("$SCRIPT_DIR/rvfi_wrapper.sv")
 
-sv2v -I "$SCRIPT_DIR/riscv-formal/checks" \
-     --write="$BUILD_DIR" \
-     "$BUILD_DIR/rvfi_defines.vh" \
-     "${sources[@]}"
+sv2v --write="$BUILD_DIR" "${sources[@]}"
 
 echo "formal/build.sh: wrote plain-Verilog sources to $BUILD_DIR"

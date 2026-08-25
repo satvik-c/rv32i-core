@@ -11,8 +11,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 git submodule update --init --recursive -- formal/riscv-formal
 
-# Compat patch: modern Yosys wants `rand const reg`, not the vendored
-# `const rand reg`. Applied to the submodule's working tree, never committed.
+# Compat patch: modern Yosys wants `rand const reg`, not the vendored order
 MACROS_VH="$RF_DIR/checks/rvfi_macros.vh"
 if grep -q '^`define rvformal_const_rand_reg const rand reg$' "$MACROS_VH"; then
     sed -i 's/^`define rvformal_const_rand_reg const rand reg$/`define rvformal_const_rand_reg rand const reg/' "$MACROS_VH"
