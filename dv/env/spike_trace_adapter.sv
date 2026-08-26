@@ -1,8 +1,6 @@
 module spike_trace_adapter
     import rvfi_pkg::*;
-(
-    input mailbox #(rvfi_txn) spike2scb
-);
+();
 
     task automatic push (ref rvfi_txn pending, input rvfi_txn next, input mailbox #(rvfi_txn) spike2scb);
         if (pending != null && spike2scb != null) begin
@@ -18,19 +16,13 @@ module spike_trace_adapter
         end
     endtask
 
-    initial begin
-        string log_path, line;
+    task automatic load_log(string log_path, mailbox #(rvfi_txn) spike2scb);
+        string line;
         int fd;
-
         int hart, priv, rd_idx;
         logic [31:0] pc, insn, rd_val, mem_addr, mem_data;
         rvfi_txn txn, pending;
         logic done;
-        
-        if (!$value$plusargs("SPIKE_LOG=%s", log_path)) begin
-            $error("SPIKE_LOG path not provided");
-            $finish;
-        end
 
         fd = $fopen(log_path, "r");
         if (fd == 0) begin
@@ -100,6 +92,6 @@ module spike_trace_adapter
 
         push(pending, null, spike2scb);
         $fclose(fd);
-    end
+    endtask
 
 endmodule

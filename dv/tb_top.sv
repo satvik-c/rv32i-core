@@ -59,9 +59,37 @@ module tb_top
     always #5 clk = ~clk;
 
     initial begin
+        int fd;
+        string manifest_path, line, hex_path, log_path;
+        int randomize;
+
         rst_n = 0;
-        repeat (5) @(posedge clk);
-        rst_n = 1;
+
+        if (!$value$plusargs("MANIFEST=%s", manifest_path)) begin
+            $error("MANIFEST path not provided");
+            $finish;
+        end
+
+        fd = $fopen(manifest_path, "r");
+        if (fd == 0) begin
+            $error("Could not open manifest %s", manifest_path);
+            $finish;
+        end
+
+        while ($fgets(line, fd)) begin
+            if ($sscanf(line, "%s %s %d", hex_path, log_path, randomize) == 3) begin
+                rst_n = 0;
+                mem_model_u.load_program(hex_path, randomize != 0);
+                spike_trace_adapter_u.load_log(log_path, spike2scb);
+                repeat (5) @(posedge clk);
+                rst_n = 1;
+                rvfi_scoreboard_u.run_one_program();
+                rst_n = 0;
+            end
+        end
+        $fclose(fd);
+
+        rvfi_scoreboard_u.report_and_finish();
     end
 
     rv32i_core #(
@@ -74,9 +102,7 @@ module tb_top
         .*
     );
 
-    spike_trace_adapter spike_trace_adapter_u (
-        .spike2scb(spike2scb)
-    );
+    spike_trace_adapter spike_trace_adapter_u ();
 
     rvfi_monitor rvfi_monitor_u (
         .*

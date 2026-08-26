@@ -53,11 +53,10 @@ $(BUILD)/%.spike.log: $(BUILD)/%.elf
 
 # Run DSim on any test passed via TEST=<name>
 run_test: $(BUILD)/$(TEST).hex $(BUILD)/$(TEST).spike.log
+	@echo "$(BUILD)/$(TEST).hex $(BUILD)/$(TEST).spike.log $(RANDOMIZE)" > $(BUILD)/$(TEST).$(RANDOMIZE).manifest.txt
 	$(DSIM) -f filelist.f +incdir+dv/env dv/tb_top.sv -top tb_top -code-cov a \
 		-cov-db $(BUILD)/$(TEST).$(RANDOMIZE).metrics.db \
-		+HEX_FILE=$(BUILD)/$(TEST).hex \
-		+SPIKE_LOG=$(BUILD)/$(TEST).spike.log \
-		$(if $(filter 1,$(RANDOMIZE)),+RANDOMIZE_MEM_TIMING)
+		+MANIFEST=$(BUILD)/$(TEST).$(RANDOMIZE).manifest.txt
 
 test_smoke:
 	@$(MAKE) run_test TEST=test_smoke

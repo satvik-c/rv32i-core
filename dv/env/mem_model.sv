@@ -41,16 +41,11 @@ module mem_model
     logic [31:0] back_dmem_rsp_rdata;
     logic randomize_active;
 
-    initial begin
-        string hex_file;
-        if ($value$plusargs("HEX_FILE=%s", hex_file)) begin
-            $readmemh(hex_file, mem);
-        end else begin
-            $error("MEM_MODEL: hex_file path not provided");
-            $finish;
-        end
-        randomize_active = ($test$plusargs("RANDOMIZE_MEM_TIMING")) ? 1'b1 : 1'b0;
-    end
+    task automatic load_program(string hex_file, bit randomize);
+        mem.delete();
+        $readmemh(hex_file, mem);
+        randomize_active = randomize;
+    endtask
 
     // IMEM Read
     mem_timing_agent #(
