@@ -133,6 +133,10 @@ coverage_signoff: $(foreach t,$(ALL_TESTS),$(BUILD)/$(t).hex $(BUILD)/$(t).spike
 		echo "$(BUILD)/$$t.hex $(BUILD)/$$t.spike.log 0" >> $(MANIFEST); \
 		echo "$(BUILD)/$$t.hex $(BUILD)/$$t.spike.log 1" >> $(MANIFEST); \
 	done
+	@for i in 1 2 3 4 5 6 7 8 9 10 11 12; do \
+		echo "$(BUILD)/test_fault_ecall.hex $(BUILD)/test_fault_ecall.spike.log 1" >> $(MANIFEST); \
+		echo "$(BUILD)/test_fault_ebreak.hex $(BUILD)/test_fault_ebreak.spike.log 1" >> $(MANIFEST); \
+	done
 	@for s in $$(seq 1 $(NUM_PROGS)); do \
 		python3 scripts/gen_random_program.py --seed $$s --count $(NUM_INSTR) -o $(RANDOM_DIR)/prog_$$s.s; \
 		$(MAKE) $(RANDOM_DIR)/prog_$$s.hex $(RANDOM_DIR)/prog_$$s.spike.log; \
