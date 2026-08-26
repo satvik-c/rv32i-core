@@ -80,6 +80,7 @@ module datapath
 
     reg_file reg_file_u (
         .clk(clk),
+        .rst_n(rst_n),
         .a1(instr[19:15]),
         .a2(instr[24:20]),
         .a3(instr[11:7]),

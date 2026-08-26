@@ -1,6 +1,7 @@
 module reg_file
 (
     input logic clk,
+    input logic rst_n,
     input logic [4:0] a1,
     input logic [4:0] a2,
     input logic [4:0] a3,
@@ -12,13 +13,14 @@ module reg_file
 
     logic [31:0] regs [32];
 
-    initial regs[0] = 32'b0;
-
     assign rd1 = (a1 == 5'b0) ? 32'b0 : regs[a1];
     assign rd2 = (a2 == 5'b0) ? 32'b0 : regs[a2];
 
     always_ff @(posedge clk) begin
-        if (we3 && a3 != 5'b0) regs[a3] <= wd3;
+        if (!rst_n) begin
+            for (int i = 0; i < 32; i++) regs[i] <= 32'b0;
+        end
+        else if (we3 && a3 != 5'b0) regs[a3] <= wd3;
     end
 
 endmodule
