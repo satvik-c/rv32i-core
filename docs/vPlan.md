@@ -255,6 +255,7 @@ The two axes cross. `test_memory_stall` (§10) is the directed suite replayed un
 *   **`test_random_program`**: Generated random programs — target 500 programs of roughly 2,000 instructions each — every one diffed against the golden model over its full execution, under randomized memory timing.
 *   **`test_compiled_c`**: Bare-metal C programs compiled for `-march=rv32i -mabi=ilp32`, exercising the core against real compiler output: function calls and the stack, struct and array access, loops, and integer arithmetic that the compiler lowers into shift-and-add sequences. Console output through `SIM_PUTC`.
 *   **`test_riscv_tests`** *(Stage 2)*: The upstream `riscv-tests` `rv32ui-p-*` suite, executed unmodified. Requires the CSR and trap support of MAS §11, including the trap-on-unimplemented-CSR behavior its reset sequence depends on (MAS §11.4).
+*   **`coverage_signoff`**: The full regression — every directed/fault test in both timing modes, plus 100 random programs — run in a single `dsim` invocation against one coverage database, giving `dcreport` an exact signoff percentage instead of a merged bound.
 
 ---
 

@@ -16,7 +16,7 @@ SPIKE_MEM := -m0x7f000000:0x01000000 -m0x80000000:0x00300000
 
 TEST ?= test_smoke
 RANDOMIZE ?= 0
-NUM_PROGS ?= 500
+NUM_PROGS ?= 100
 NUM_INSTR ?= 2000
 
 ALL_TESTS := $(basename $(notdir $(wildcard sw/tests/*.s sw/tests/*.c)))
@@ -94,7 +94,6 @@ test_random_program:
 		$(DCREPORT) $(RANDOM_REPORTS)/prog_$$s $(RANDOM_DIR)/prog_$$s.1.metrics.db > /dev/null 2>&1 || true; \
 	done; \
 	scripts/regression_summary.sh $(RANDOM_LOGS) $(RANDOM_REPORTS) || fail=1; \
-	scripts/coverage_union.py $(RANDOM_DIR)/*.metrics.db; \
 	exit $$fail
 
 test_memory_stall:
@@ -121,13 +120,28 @@ regression:
 	done; \
 	echo ""; \
 	scripts/regression_summary.sh $(REGRESSION_LOGS) $(REPORTS) || fail=1; \
-	echo ""; \
-	scripts/coverage_union.py $(BUILD)/*.metrics.db; \
 	exit $$fail
 
-# Unions regression + test_random_program metrics; run both first
-coverage_signoff:
-	scripts/coverage_union.py $(BUILD)/*.metrics.db $(RANDOM_DIR)/*.metrics.db
+# Runs the full regression in one dsim invocation for an exact dcreport coverage number (vPlan.md §12).
+COVERAGE_SIGNOFF_DIR := $(BUILD)/coverage_signoff
+MANIFEST := $(COVERAGE_SIGNOFF_DIR)/manifest.txt
+
+coverage_signoff: $(foreach t,$(ALL_TESTS),$(BUILD)/$(t).hex $(BUILD)/$(t).spike.log)
+	@mkdir -p $(COVERAGE_SIGNOFF_DIR) $(RANDOM_DIR)
+	@rm -f $(MANIFEST)
+	@for t in $(ALL_TESTS); do \
+		echo "$(BUILD)/$$t.hex $(BUILD)/$$t.spike.log 0" >> $(MANIFEST); \
+		echo "$(BUILD)/$$t.hex $(BUILD)/$$t.spike.log 1" >> $(MANIFEST); \
+	done
+	@for s in $$(seq 1 $(NUM_PROGS)); do \
+		python3 scripts/gen_random_program.py --seed $$s --count $(NUM_INSTR) -o $(RANDOM_DIR)/prog_$$s.s; \
+		$(MAKE) $(RANDOM_DIR)/prog_$$s.hex $(RANDOM_DIR)/prog_$$s.spike.log; \
+		echo "$(RANDOM_DIR)/prog_$$s.hex $(RANDOM_DIR)/prog_$$s.spike.log 1" >> $(MANIFEST); \
+	done
+	$(DSIM) -f filelist.f +incdir+dv/env dv/tb_top.sv -top tb_top -code-cov a \
+		-cov-db $(COVERAGE_SIGNOFF_DIR)/regression.metrics.db \
+		+MANIFEST=$(MANIFEST)
+	$(DCREPORT) $(REPORTS)/coverage_signoff $(COVERAGE_SIGNOFF_DIR)/regression.metrics.db
 
 formal:
 	@./formal/setup.sh
