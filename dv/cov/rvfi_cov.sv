@@ -6,10 +6,9 @@ module rvfi_cov
 
     typedef enum { JAL, JALR_0, JALR_1 } jump_type_e;
     typedef enum { SEQ, TAKEN_BRANCH, JAL_PC, JALR_PC } pc_src_e;
-    typedef enum { 
-        NONE, ILLEGAL_INSN, ECALL, EBREAK, 
-        INSN_MISALIGNED, LOAD_MISALIGNED, STORE_MISALIGNED,
-        LOAD_FAULT, STORE_FAULT
+    typedef enum {
+        NONE, ILLEGAL_INSN, ECALL, EBREAK,
+        INSN_MISALIGNED, LOAD_FAULT, STORE_FAULT
     } fault_cause_e;
 
     covergroup cg_rvfi with function sample(rvfi_txn txn, bit is_taken, bit is_backward, jump_type_e jump_type,
@@ -160,13 +159,12 @@ module rvfi_cov
             bins jalr = { JALR_PC };
         }
 
+        // load/store misaligned vs. access-fault is indistinguishable from RVFI alone in Stage 1 (WAIVER-05).
         cp_fault : coverpoint fault iff (txn.rvfi_trap) {
             bins illegal_insn = { ILLEGAL_INSN };
             bins ecall = { ECALL };
             bins ebreak = { EBREAK };
             bins insn_misaligned = { INSN_MISALIGNED };
-            bins load_misaligned = { LOAD_MISALIGNED };
-            bins store_misaligned = { STORE_MISALIGNED };
             bins load_fault = { LOAD_FAULT };
             bins store_fault = { STORE_FAULT };
         }
@@ -217,7 +215,8 @@ module rvfi_cov
             mon2cov.get(txn);
 
             is_taken = (txn.rvfi_pc_wdata != txn.rvfi_pc_rdata + 4);
-            is_backward = (txn.rvfi_pc_wdata < txn.rvfi_pc_rdata);
+            // A not-taken branch always resumes at pc+4, so direction must come from the offset's sign bit, not the actual next-PC transition.
+            is_backward = (txn.rvfi_insn[6:0] == OP_BRANCH) ? txn.rvfi_insn[31] : (txn.rvfi_pc_wdata < txn.rvfi_pc_rdata);
             if (txn.rvfi_insn[6:0] == OP_JAL) begin
                 jump_type = JAL;
             end else if (txn.rvfi_insn[6:0] == OP_JALR) begin
@@ -287,15 +286,9 @@ module rvfi_cov
                 if (txn.rvfi_insn == 32'h0000_0073) fault = ECALL;
                 else if (txn.rvfi_insn == 32'h0010_0073) fault = EBREAK;
                 else if (txn.is_illegal_funct3()) fault = ILLEGAL_INSN;
-                else if (txn.rvfi_insn[6:0] == OP_LOAD) begin
-                    if (txn.rvfi_insn[13:12] == 2'b10 && txn.rvfi_mem_addr[1:0] != 2'b00) fault = LOAD_MISALIGNED;
-                    else if (txn.rvfi_insn[13:12] == 2'b01 && txn.rvfi_mem_addr[0] != 1'b0) fault = LOAD_MISALIGNED;
-                    else fault = LOAD_FAULT;
-                end else if (txn.rvfi_insn[6:0] == OP_STORE) begin
-                    if (txn.rvfi_insn[13:12] == 2'b10 && txn.rvfi_mem_addr[1:0] != 2'b00) fault = STORE_MISALIGNED;
-                    else if (txn.rvfi_insn[13:12] == 2'b01 && txn.rvfi_mem_addr[0] != 1'b0) fault = STORE_MISALIGNED;
-                    else fault = STORE_FAULT;
-                end else if (txn.rvfi_insn[6:0] inside {OP_JAL, OP_JALR, OP_BRANCH}) begin
+                else if (txn.rvfi_insn[6:0] == OP_LOAD) fault = LOAD_FAULT;
+                else if (txn.rvfi_insn[6:0] == OP_STORE) fault = STORE_FAULT;
+                else if (txn.rvfi_insn[6:0] inside {OP_JAL, OP_JALR, OP_BRANCH}) begin
                     fault = INSN_MISALIGNED;
                 end else begin
                     fault = ILLEGAL_INSN;
