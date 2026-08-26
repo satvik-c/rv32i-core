@@ -171,7 +171,15 @@ module rvfi_cov
             bins store_fault = { STORE_FAULT };
         }
 
-        cx_instr_aliasing : cross cp_instr, cp_aliasing;
+        // lui/auipc/jal (no operands) and fence/system/branch/store (no rd) make several bins unreachable.
+        cx_instr_aliasing : cross cp_instr, cp_aliasing {
+            ignore_bins no_aliasing_axis = binsof(cp_instr) intersect {OP_LUI, OP_AUIPC, OP_JAL};
+            ignore_bins no_regs = (binsof(cp_instr) intersect {OP_FENCE, OP_SYSTEM}) &&
+                (binsof(cp_aliasing.rd_rs1) || binsof(cp_aliasing.rd_rs2) ||
+                 binsof(cp_aliasing.rs1_rs2) || binsof(cp_aliasing.none));
+            ignore_bins no_rd = (binsof(cp_instr) intersect {OP_BRANCH, OP_STORE}) &&
+                (binsof(cp_aliasing.rd_rs1) || binsof(cp_aliasing.rd_rs2));
+        }
         cx_branch_instr_outcome_dir : cross cp_branch_instr, cp_branch_outcome, cp_branch_dir;
         // word has no ext variant and can't be at a non-zero offset; halfword can't be at an odd offset
         cx_ls_width_byte_offset_load_ext : cross cp_ls_width, cp_byte_offset, cp_load_ext {

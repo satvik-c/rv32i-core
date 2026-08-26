@@ -84,7 +84,10 @@ module mem_timing_cov
         }
 
         cx_imem_lat : cross cp_instr, cp_imem_lat;
-        cx_dmem_lat : cross cp_instr, cp_dmem_lat;
+        // cp_dmem_lat only samples on load/store, so the other instruction bins here are unreachable.
+        cx_dmem_lat : cross cp_instr, cp_dmem_lat {
+            ignore_bins non_mem_instr = !binsof(cp_instr) intersect {OP_LOAD, OP_STORE};
+        }
 
     endgroup
 

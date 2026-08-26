@@ -266,6 +266,8 @@ This section documents coverage and assertion gaps that are structurally unreach
 |---|---|---|---|
 | **WAIVER - 01** | `regs[0]` write-immunity proof (Property: `W1`) | Sole write path is a single unconditional guard (`if (we3 && a3 != 5'b0) regs[a3] <= wd3;`), and `regs[0]` is unobservable externally since the read mux already forces zero at address 0 regardless of array contents. | Closed by RTL inspection, not a dedicated assertion. |
 | **WAIVER - 02** | `ALU Instruction × ALU Result Corners` cross covers `add`/`sub`/`addi` only | All ALU ops share one combinational mux with no per-instruction corner logic, and `carry`/`overflow` are only architecturally meaningful for `ADD`/`SUB`/`ADDI`. Shifts are covered separately by `cx_shift_instr_amt`. | Closed by `cp_alu_result`'s existing uncrossed sampling across all ALU ops. |
+| **WAIVER - 03** | `Instruction × Operand Aliasing` cross (`cx_instr_aliasing`) never reaches 100% of its raw bin count | `LUI`/`AUIPC`/`JAL` don't sample `cp_aliasing`; `FENCE`/`SYSTEM` (no registers) and `BRANCH`/`STORE` (no `rd`) can't hit several of its bins. | Closed by `ignore_bins` on the cross (`rvfi_cov.sv`); `cp_aliasing`'s own 100% and §12's aliasing criterion cover the intent. |
+| **WAIVER - 04** | `Instruction × DMEM Latency` cross (`cx_dmem_lat`) caps at 8/44 raw bins | `cp_dmem_lat` only samples on `LOAD`/`STORE` (`mem_timing_cov.sv`), so the other 9 instruction bins crossed with it are unreachable. | Closed by `ignore_bins` on the cross; `cp_dmem_lat`'s own 100% covers the intent. |
 
 ---
 
